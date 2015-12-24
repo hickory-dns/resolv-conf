@@ -1,0 +1,19 @@
+[package]
+name = "resolv-conf"
+description = """
+    The resolv.conf file parser
+"""
+license = "MIT"
+readme = "README.rst"
+keywords = ["dns", "unix", "resolv.conf", "resolv"]
+homepage = "http://github.com/tailhook/resolv-conf"
+version = "0.1.0"
+authors = ["paul@colomiets.name"]
+
+[dependencies]
+nom = "1.0"
+
+[lib]
+name = "resolv_conf"
+path = "src/lib.rs"
+
