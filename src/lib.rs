@@ -2,7 +2,6 @@
 
 mod grammar;
 
-use std::io;
 use std::net::{Ipv4Addr, Ipv6Addr};
 
 // Until std::net::IpAddr is stable
