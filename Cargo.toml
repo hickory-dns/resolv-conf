@@ -3,7 +3,7 @@ name = "resolv-conf"
 description = """
     The resolv.conf file parser
 """
-license = "MIT"
+license = "MIT/Apache-2.0"
 readme = "README.rst"
 keywords = ["dns", "unix", "resolv.conf", "resolv"]
 homepage = "http://github.com/tailhook/resolv-conf"
