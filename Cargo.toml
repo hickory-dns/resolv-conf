@@ -5,7 +5,7 @@ description = """
 """
 license = "MIT/Apache-2.0"
 readme = "README.rst"
-keywords = ["dns", "unix", "resolv.conf", "resolv"]
+keywords = ["dns", "unix", "conf", "resolv"]
 homepage = "http://github.com/tailhook/resolv-conf"
 version = "0.1.0"
 authors = ["paul@colomiets.name"]
