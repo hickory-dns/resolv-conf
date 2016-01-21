@@ -1,15 +1,10 @@
+extern crate ip;
 #[macro_use] extern crate nom;
 
 mod grammar;
 
+pub use ip::IpAddr;
 use std::net::{Ipv4Addr, Ipv6Addr};
-
-// Until std::net::IpAddr is stable
-#[derive(Clone, Debug)]
-pub enum IpAddr {
-    V4(Ipv4Addr),
-    V6(Ipv6Addr),
-}
 
 #[derive(Clone, Debug)]
 pub enum Network {

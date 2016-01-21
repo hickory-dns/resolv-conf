@@ -7,11 +7,12 @@ license = "MIT/Apache-2.0"
 readme = "README.rst"
 keywords = ["dns", "unix", "conf", "resolv"]
 homepage = "http://github.com/tailhook/resolv-conf"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["paul@colomiets.name"]
 
 [dependencies]
 nom = "1.0"
+ip = "1.0"
 
 [lib]
 name = "resolv_conf"
