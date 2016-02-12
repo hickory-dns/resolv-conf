@@ -25,6 +25,8 @@ pub struct Config {
     pub ndots: u32,
     /// Dns query timeout (default 5 [sec])
     pub timeout: u32,
+    /// Number of types resolver will retry if server is inaccesible (default 2)
+    pub attempts: u32,
     /// Round-robin selection of servers (default false)
     pub rotate: bool,
     /// Don't check names for validity (default false)
@@ -53,6 +55,7 @@ impl Config {
             sortlist: Vec::new(),
             ndots: 1,
             timeout: 5,
+            attempts: 2,
             rotate: false,
             no_check_names: false,
             inet6: false,
