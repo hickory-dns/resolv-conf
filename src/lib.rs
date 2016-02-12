@@ -1,3 +1,7 @@
+//! The crate simply parses `/etc/resolv.conf` file and creates a config object
+//!
+//!
+
 extern crate ip;
 #[macro_use] extern crate nom;
 
@@ -6,6 +10,7 @@ mod grammar;
 pub use ip::IpAddr;
 use std::net::{Ipv4Addr, Ipv6Addr};
 
+/// A network, that is an IP address and the mask
 #[derive(Clone, Debug)]
 pub enum Network {
     // Address netmask
@@ -13,6 +18,7 @@ pub enum Network {
     V6(Ipv6Addr, Ipv6Addr),
 }
 
+/// Encompasses the nameserver configuration
 #[derive(Clone, Debug)]
 pub struct Config {
     /// List of nameservers
@@ -70,5 +76,3 @@ impl Config {
         grammar::parse(buf)
     }
 }
-
-
