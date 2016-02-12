@@ -20,6 +20,8 @@ pub enum Network {
 }
 
 /// Encompasses the nameserver configuration
+///
+/// Currently the options and defaults match those of linux/glibc
 #[derive(Clone, Debug)]
 pub struct Config {
     /// List of nameservers
