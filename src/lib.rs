@@ -3,11 +3,12 @@
 //!
 
 extern crate ip;
-#[macro_use] extern crate nom;
+#[macro_use] extern crate quick_error;
 
 mod grammar;
 
 pub use ip::IpAddr;
+pub use grammar::ParseError;
 use std::net::{Ipv4Addr, Ipv6Addr};
 
 /// A network, that is an IP address and the mask
@@ -27,11 +28,13 @@ pub struct Config {
     pub search: Vec<String>,
     /// List of preferred addresses
     pub sortlist: Vec<Network>,
+    /// Enable DNS resolve debugging
+    pub debug: bool,
     /// Number of dots in name to try absolute resolving first (default 1)
     pub ndots: u32,
     /// Dns query timeout (default 5 [sec])
     pub timeout: u32,
-    /// Number of types resolver will retry if server is inaccesible (default 2)
+    /// Number of attempts to resolve name if server is inaccesible (default 2)
     pub attempts: u32,
     /// Round-robin selection of servers (default false)
     pub rotate: bool,
@@ -51,6 +54,10 @@ pub struct Config {
     pub single_request: bool,
     /// Use same socket for the A and AAAA requests
     pub single_request_reopen: bool,
+    /// Don't resolve unqualified name as top level domain
+    pub no_tld_query: bool,
+    /// Force using TCP for DNS resolution
+    pub use_vc: bool,
 }
 
 impl Config {
@@ -59,6 +66,7 @@ impl Config {
             nameservers: Vec::new(),
             search: Vec::new(),
             sortlist: Vec::new(),
+            debug: false,
             ndots: 1,
             timeout: 5,
             attempts: 2,
@@ -70,6 +78,8 @@ impl Config {
             edns0: false,
             single_request: false,
             single_request_reopen: false,
+            no_tld_query: false,
+            use_vc: false,
         }
     }
     pub fn parse(buf: &[u8]) -> Result<Config, grammar::ParseError> {

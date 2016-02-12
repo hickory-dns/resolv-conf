@@ -1,94 +1,140 @@
-use std::str::from_utf8;
-use nom::{space, eof};
-use nom::IResult::{Done};
+use std::net::{Ipv4Addr, Ipv6Addr, AddrParseError};
+use std::str::{from_utf8, Utf8Error};
 
-use {Config, IpAddr};
+use {Config, Network};
 
-
-#[derive(Debug)]
-enum Directive<'a> {
-    Nameserver(&'a str),
-    Domain(&'a str),
-    Search(Vec<&'a str>),
-    Nothing,
-}
-
-
-pub type ParseError = u32; // FIXME
-
-
-pub fn parse(input: &[u8]) -> Result<Config, ParseError> {
-    match config(&input[..]) {
-        Done(_, rc) => Ok(rc),
-        _ => Err(0)
+quick_error!{
+    /// Error while parsing resolv.conf file
+    #[derive(Debug)]
+    pub enum ParseError {
+        InvalidUtf8(line: usize, err: Utf8Error) {
+            display("bad unicode at line {}: {}", line, err)
+            cause(err)
+        }
+        InvalidValue(line: usize) {
+            display("directive at line {} is improperly formatted \
+                or contains invalid value", line)
+        }
+        InvalidOptionValue(line: usize) {
+            display("directive options at line {} contains invalid \
+                value of some option", line)
+        }
+        InvalidIp(line: usize, err: AddrParseError) {
+            display("directive at line {} contains invalid IP: {}", line, err)
+        }
+        ExtraData(line: usize) {
+            display("extra data at the end of the line {}", line)
+        }
     }
 }
 
-named!(nameserver<&[u8], Directive>,
-    chain!(
-        tag!("nameserver") ~
-        space ~
-        value: map_res!(take_until!("\n"), from_utf8) ~
-        char!('\n'),
-    || { Directive::Nameserver(value) }));
 
-named!(domain<&[u8], Directive>,
-    chain!(
-        tag!("domain") ~
-        space ~
-        value: map_res!(take_until!("\n"), from_utf8) ~
-        char!('\n'),
-    || { Directive::Domain(value) }));
-
-named!(search<&[u8], Directive>,
-    chain!(
-        tag!("search") ~
-        items: many1!(chain!(
-            space ~
-            n: map_res!(take_until_either!(" \n"), from_utf8),
-            || { n })) ~
-        char!('\n'),
-    || { Directive::Search(items) }));
-
-named!(nothing<&[u8], Directive>,
-    chain!(
-        char!('#') ~
-        take_until!("\n") ~
-        char!('\n'),
-    || { Directive::Nothing }));
+fn ip_v4_netw(val: &str) -> Result<Network, AddrParseError> {
+    let mut pair = val.splitn(2, '/');
+    let ip = try!(pair.next().unwrap().parse());
+    if let Some(msk) = pair.next() {
+        Ok(Network::V4(ip, try!(msk.parse())))
+    } else {
+        Ok(Network::V4(ip, Ipv4Addr::new(255, 255, 255, 255)))
+    }
+}
+fn ip_v6_netw(val: &str) -> Result<Network, AddrParseError> {
+    let mut pair = val.splitn(2, '/');
+    let ip = try!(pair.next().unwrap().parse());
+    if let Some(msk) = pair.next() {
+        Ok(Network::V6(ip, try!(msk.parse())))
+    } else {
+        Ok(Network::V6(ip, Ipv6Addr::new(65535, 65535, 65535, 65535,
+                                         65535, 65535, 65535, 65535)))
+    }
+}
 
 
-named!(directive<&[u8], Directive>, alt!(
-    nameserver |
-    domain |
-    search |
-    nothing));
-
-named!(directives<&[u8], Vec<Directive> >, many0!(directive));
-
-
-named!(config<&[u8], Config>,
-    chain!(
-        rc: map_res!(directives, parse_directives) ~ eof,
-        || { rc }));
-
-fn parse_directives(directives: Vec<Directive>) -> Result<Config, ()> {
-    use self::Directive::*;
+pub fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
+    use self::ParseError::*;
     let mut cfg = Config::new();
-    for dir in directives {
-        match dir {
-            Nameserver(n) => {
-                cfg.nameservers.push(
-                    IpAddr::V4(try!(n.parse().map_err(|_| ()))))
+    'lines: for (lineno, line) in bytes.split(|&x| x == b'\n').enumerate() {
+        for &c in line.iter() {
+            if c != b'\t' && c != b' ' {
+                if c == b';' || c == b'#' {
+                    continue 'lines;
+                } else {
+                    break;
+                }
             }
-            Domain(d) => {
-                cfg.search = vec![d.to_string()];
+        }
+        // All that dances above to allow invalid utf-8 inside the comments
+        let mut words = try!(from_utf8(line)
+            .map_err(|e| InvalidUtf8(lineno, e)))
+            .split_whitespace();
+        let keyword = match words.next() { Some(x) => x, None => continue };
+        match keyword {
+            "nameserver" => {
+                let srv = try!(words.next().and_then(|x| x.parse().ok())
+                    .ok_or(InvalidValue(lineno)));
+                cfg.nameservers.push(srv);
+                if words.next().is_some() {
+                    return Err(ExtraData(lineno));
+                }
             }
-            Search(items) => {
-                cfg.search = items
-                    .iter().map(|x| x.to_string()).collect();
+            "domain" => {
+                let dom = try!(words.next().and_then(|x| x.parse().ok())
+                    .ok_or(InvalidValue(lineno)));
+                cfg.search.clear();
+                cfg.search.push(dom);
+                if words.next().is_some() {
+                    return Err(ExtraData(lineno));
+                }
             }
-            Nothing => {}
+            "search" => {
+                cfg.search.clear();
+                cfg.search.extend(words.map(|x| x.to_string()));
+            }
+            "sortlist" => {
+                cfg.sortlist.clear();
+                for pair in words {
+                    let netw = try!(ip_v4_netw(pair)
+                        .or_else(|_| ip_v6_netw(pair))
+                        .map_err(|e| InvalidIp(lineno, e)));
+                    cfg.sortlist.push(netw);
+                }
+            }
+            "options" => {
+                for pair in words {
+                    let mut iter = pair.splitn(2, ':');
+                    let key = iter.next().unwrap();
+                    let value = iter.next();
+                    if iter.next().is_some() {
+                        return Err(ExtraData(lineno));
+                    }
+                    match (key, value) {
+                        // TODO(tailhook) ensure that values are None?
+                        ("debug", _) => cfg.debug = true,
+                        ("ndots", Some(x)) => cfg.ndots = try!(x.parse()
+                                .map_err(|_| InvalidOptionValue(lineno))),
+                        ("timeout", Some(x)) => cfg.timeout = try!(x.parse()
+                                .map_err(|_| InvalidOptionValue(lineno))),
+                        ("attempts", Some(x)) => cfg.attempts = try!(x.parse()
+                                .map_err(|_| InvalidOptionValue(lineno))),
+                        ("rotate", _) => cfg.rotate = true,
+                        ("no-check-names", _) => cfg.no_check_names = true,
+                        ("inet6", _) => cfg.inet6 = true,
+                        ("ip6-bytestring", _) => cfg.ip6_bytestring = true,
+                        ("ip6-dotint", _) => cfg.ip6_dotint = true,
+                        ("no-ip6-dotint", _) => cfg.ip6_dotint = false,
+                        ("edns0", _) => cfg.edns0 = true,
+                        ("single-request", _) => cfg.single_request = true,
+                        ("single-request-reopen", _)
+                            => cfg.single_request_reopen = true,
+                        ("no-tld-query", _) => cfg.no_tld_query = true,
+                        ("use-vc", _) => cfg.use_vc = true,
+                        // Ignore unknown options
+                        _ => {}
+                    }
+                }
+            }
+            // Ignore unknown directives
+            _ => {}
         }
     }
     Ok(cfg)

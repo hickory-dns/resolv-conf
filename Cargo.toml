@@ -11,7 +11,7 @@ version = "0.2.0"
 authors = ["paul@colomiets.name"]
 
 [dependencies]
-nom = "1.0"
+quick-error = "0.2.2"
 ip = "1.0"
 
 [lib]
