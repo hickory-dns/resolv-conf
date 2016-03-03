@@ -11,8 +11,7 @@ version = "0.3.0"
 authors = ["paul@colomiets.name"]
 
 [dependencies]
-quick-error = "0.2.2"
-ip = "1.0"
+quick-error = "1.0.0"
 
 [lib]
 name = "resolv_conf"

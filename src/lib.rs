@@ -2,13 +2,12 @@
 //!
 //!
 
-extern crate ip;
 #[macro_use] extern crate quick_error;
 
 mod grammar;
 
-pub use ip::IpAddr;
 pub use grammar::ParseError;
+use std::net::IpAddr;
 use std::net::{Ipv4Addr, Ipv6Addr};
 
 /// A network, that is an IP address and the mask
