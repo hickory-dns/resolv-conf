@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Network","A network, that is an IP address and the mask"],["ParseError","Error while parsing resolv.conf file"]],"struct":[["Config","Encompasses the nameserver configuration"]]});

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Config` struct in crate `resolv_conf`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Config">
+
+    <title>resolv_conf::Config - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../main.css">
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='index.html'>resolv_conf</a></p><script>window.sidebarCurrent = {name: 'Config', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='index.html'>resolv_conf</a>::<wbr><a class='struct' href=''>Config</a></span><span class='out-of-band'><span id='render-detail'>
+            <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                [<span class='inner'>&#x2212;</span>]
+            </a>
+        </span><a id='src-201' class='srclink' href='../src/resolv_conf/lib.rs.html#25-62' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Config {
+    pub nameservers: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='enum' href='https://doc.rust-lang.org/nightly/std/net/ip/enum.IpAddr.html' title='std::net::ip::IpAddr'>IpAddr</a>&gt;,
+    pub search: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;,
+    pub sortlist: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='enum' href='../resolv_conf/enum.Network.html' title='resolv_conf::Network'>Network</a>&gt;,
+    pub debug: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    pub ndots: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
+    pub timeout: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
+    pub attempts: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u32.html'>u32</a>,
+    pub rotate: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    pub no_check_names: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    pub inet6: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    pub ip6_bytestring: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    pub ip6_dotint: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    pub edns0: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    pub single_request: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    pub single_request_reopen: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    pub no_tld_query: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+    pub use_vc: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,
+}</pre><div class='docblock'><p>Encompasses the nameserver configuration</p>
+
+<p>Currently the options and defaults match those of linux/glibc</p>
+</div><h2 class='fields'>Fields</h2>
+<table><tr class='stab '>
+                                  <td id='structfield.nameservers'><code>nameservers</code></td><td><div class='docblock'><p>List of nameservers</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.search'><code>search</code></td><td><div class='docblock'><p>List of suffixes to append to name when it doesn&#39;t contain ndots</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.sortlist'><code>sortlist</code></td><td><div class='docblock'><p>List of preferred addresses</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.debug'><code>debug</code></td><td><div class='docblock'><p>Enable DNS resolve debugging</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.ndots'><code>ndots</code></td><td><div class='docblock'><p>Number of dots in name to try absolute resolving first (default 1)</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.timeout'><code>timeout</code></td><td><div class='docblock'><p>Dns query timeout (default 5 [sec])</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.attempts'><code>attempts</code></td><td><div class='docblock'><p>Number of attempts to resolve name if server is inaccesible (default 2)</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.rotate'><code>rotate</code></td><td><div class='docblock'><p>Round-robin selection of servers (default false)</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.no_check_names'><code>no_check_names</code></td><td><div class='docblock'><p>Don&#39;t check names for validity (default false)</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.inet6'><code>inet6</code></td><td><div class='docblock'><p>Try AAAA query before A</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.ip6_bytestring'><code>ip6_bytestring</code></td><td><div class='docblock'><p>Use reverse lookup of ipv6 using bit-label format described instead
+of nibble format</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.ip6_dotint'><code>ip6_dotint</code></td><td><div class='docblock'><p>Do ipv6 reverse lookups in ip6.int zone instead of ip6.arpa
+(default false)</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.edns0'><code>edns0</code></td><td><div class='docblock'><p>Enable dns extensions described in RFC 2671</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.single_request'><code>single_request</code></td><td><div class='docblock'><p>Don&#39;t make ipv4 and ipv6 requests simultaneously</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.single_request_reopen'><code>single_request_reopen</code></td><td><div class='docblock'><p>Use same socket for the A and AAAA requests</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.no_tld_query'><code>no_tld_query</code></td><td><div class='docblock'><p>Don&#39;t resolve unqualified name as top level domain</p>
+</div></td></tr><tr class='stab '>
+                                  <td id='structfield.use_vc'><code>use_vc</code></td><td><div class='docblock'><p>Force using TCP for DNS resolution</p>
+</div></td></tr></table><h2 id='methods'>Methods</h2><h3 class='impl'><code>impl <a class='struct' href='../resolv_conf/struct.Config.html' title='resolv_conf::Config'>Config</a></code></h3><div class='impl-items'><h4 id='method.new' class='method'><code>fn <a href='#method.new' class='fnname'>new</a>() -&gt; <a class='struct' href='../resolv_conf/struct.Config.html' title='resolv_conf::Config'>Config</a></code></h4>
+<h4 id='method.parse' class='method'><code>fn <a href='#method.parse' class='fnname'>parse</a>(buf: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.u8.html'>u8</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a>) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/result/enum.Result.html' title='core::result::Result'>Result</a>&lt;<a class='struct' href='../resolv_conf/struct.Config.html' title='resolv_conf::Config'>Config</a>, <a class='enum' href='../resolv_conf/enum.ParseError.html' title='resolv_conf::ParseError'>ParseError</a>&gt;</code></h4>
+</div><h2 id='implementations'>Trait Implementations</h2><h3 id='derived_implementations'>Derived Implementations </h3><h3 class='impl'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../resolv_conf/struct.Config.html' title='resolv_conf::Config'>Config</a></code></h3><div class='impl-items'><h4 id='method.fmt' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#method.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></h4>
+</div><h3 class='impl'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> for <a class='struct' href='../resolv_conf/struct.Config.html' title='resolv_conf::Config'>Config</a></code></h3><div class='impl-items'><h4 id='method.clone' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class='struct' href='../resolv_conf/struct.Config.html' title='resolv_conf::Config'>Config</a></code></h4>
+<h4 id='method.clone_from' class='method'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: &amp;Self)</code></h4>
+</div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../";
+        window.currentCrate = "resolv_conf";
+        window.playgroundUrl = "";
+    </script>
+    <script src="../jquery.js"></script>
+    <script src="../main.js"></script>
+    
+    <script defer src="../search-index.js"></script>
+</body>
+</html>

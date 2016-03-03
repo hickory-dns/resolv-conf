@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["ParseError","Error while parsing resolv.conf file"]]});
