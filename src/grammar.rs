@@ -78,7 +78,7 @@ pub fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                 let srv = words
                     .next()
                     .and_then(|x| x.parse().ok())
-                    .ok_or(InvalidValue(lineno))?;
+                    .ok_or_else(|| InvalidValue(lineno))?;
                 cfg.nameservers.push(srv);
                 if words.next().is_some() {
                     return Err(ExtraData(lineno));
@@ -88,7 +88,7 @@ pub fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                 let dom = words
                     .next()
                     .and_then(|x| x.parse().ok())
-                    .ok_or(InvalidValue(lineno))?;
+                    .ok_or_else(|| InvalidValue(lineno))?;
                 cfg.search.clear();
                 cfg.search.push(dom);
                 if words.next().is_some() {
