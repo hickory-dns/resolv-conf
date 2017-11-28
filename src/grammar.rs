@@ -46,7 +46,16 @@ fn ip_v6_netw(val: &str) -> Result<Network, AddrParseError> {
     } else {
         Ok(Network::V6(
             ip,
-            Ipv6Addr::new(65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535),
+            Ipv6Addr::new(
+                65_535,
+                65_535,
+                65_535,
+                65_535,
+                65_535,
+                65_535,
+                65_535,
+                65_535,
+            ),
         ))
     }
 }
