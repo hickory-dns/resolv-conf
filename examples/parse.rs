@@ -1,4 +1,4 @@
-use std::io::{Read};
+use std::io::Read;
 use std::fs::File;
 
 extern crate resolv_conf;

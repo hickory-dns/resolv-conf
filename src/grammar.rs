@@ -1,5 +1,5 @@
-use std::net::{Ipv4Addr, Ipv6Addr, AddrParseError};
-use std::str::{from_utf8, Utf8Error};
+use std::net::{AddrParseError, Ipv4Addr, Ipv6Addr};
+use std::str::{Utf8Error, from_utf8};
 
 use {Config, Network};
 
@@ -31,21 +31,23 @@ quick_error!{
 
 fn ip_v4_netw(val: &str) -> Result<Network, AddrParseError> {
     let mut pair = val.splitn(2, '/');
-    let ip = try!(pair.next().unwrap().parse());
+    let ip = pair.next().unwrap().parse()?;
     if let Some(msk) = pair.next() {
-        Ok(Network::V4(ip, try!(msk.parse())))
+        Ok(Network::V4(ip, msk.parse()?))
     } else {
         Ok(Network::V4(ip, Ipv4Addr::new(255, 255, 255, 255)))
     }
 }
 fn ip_v6_netw(val: &str) -> Result<Network, AddrParseError> {
     let mut pair = val.splitn(2, '/');
-    let ip = try!(pair.next().unwrap().parse());
+    let ip = pair.next().unwrap().parse()?;
     if let Some(msk) = pair.next() {
-        Ok(Network::V6(ip, try!(msk.parse())))
+        Ok(Network::V6(ip, msk.parse()?))
     } else {
-        Ok(Network::V6(ip, Ipv6Addr::new(65535, 65535, 65535, 65535,
-                                         65535, 65535, 65535, 65535)))
+        Ok(Network::V6(
+            ip,
+            Ipv6Addr::new(65535, 65535, 65535, 65535, 65535, 65535, 65535, 65535),
+        ))
     }
 }
 
@@ -64,22 +66,29 @@ pub fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
             }
         }
         // All that dances above to allow invalid utf-8 inside the comments
-        let mut words = try!(from_utf8(line)
-            .map_err(|e| InvalidUtf8(lineno, e)))
+        let mut words = from_utf8(line)
+            .map_err(|e| InvalidUtf8(lineno, e))?
             .split_whitespace();
-        let keyword = match words.next() { Some(x) => x, None => continue };
+        let keyword = match words.next() {
+            Some(x) => x,
+            None => continue,
+        };
         match keyword {
             "nameserver" => {
-                let srv = try!(words.next().and_then(|x| x.parse().ok())
-                    .ok_or(InvalidValue(lineno)));
+                let srv = words
+                    .next()
+                    .and_then(|x| x.parse().ok())
+                    .ok_or(InvalidValue(lineno))?;
                 cfg.nameservers.push(srv);
                 if words.next().is_some() {
                     return Err(ExtraData(lineno));
                 }
             }
             "domain" => {
-                let dom = try!(words.next().and_then(|x| x.parse().ok())
-                    .ok_or(InvalidValue(lineno)));
+                let dom = words
+                    .next()
+                    .and_then(|x| x.parse().ok())
+                    .ok_or(InvalidValue(lineno))?;
                 cfg.search.clear();
                 cfg.search.push(dom);
                 if words.next().is_some() {
@@ -93,9 +102,9 @@ pub fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
             "sortlist" => {
                 cfg.sortlist.clear();
                 for pair in words {
-                    let netw = try!(ip_v4_netw(pair)
+                    let netw = ip_v4_netw(pair)
                         .or_else(|_| ip_v6_netw(pair))
-                        .map_err(|e| InvalidIp(lineno, e)));
+                        .map_err(|e| InvalidIp(lineno, e))?;
                     cfg.sortlist.push(netw);
                 }
             }
@@ -110,12 +119,15 @@ pub fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                     match (key, value) {
                         // TODO(tailhook) ensure that values are None?
                         ("debug", _) => cfg.debug = true,
-                        ("ndots", Some(x)) => cfg.ndots = try!(x.parse()
-                                .map_err(|_| InvalidOptionValue(lineno))),
-                        ("timeout", Some(x)) => cfg.timeout = try!(x.parse()
-                                .map_err(|_| InvalidOptionValue(lineno))),
-                        ("attempts", Some(x)) => cfg.attempts = try!(x.parse()
-                                .map_err(|_| InvalidOptionValue(lineno))),
+                        ("ndots", Some(x)) => {
+                            cfg.ndots = x.parse().map_err(|_| InvalidOptionValue(lineno))?
+                        }
+                        ("timeout", Some(x)) => {
+                            cfg.timeout = x.parse().map_err(|_| InvalidOptionValue(lineno))?
+                        }
+                        ("attempts", Some(x)) => {
+                            cfg.attempts = x.parse().map_err(|_| InvalidOptionValue(lineno))?
+                        }
                         ("rotate", _) => cfg.rotate = true,
                         ("no-check-names", _) => cfg.no_check_names = true,
                         ("inet6", _) => cfg.inet6 = true,
@@ -124,8 +136,7 @@ pub fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                         ("no-ip6-dotint", _) => cfg.ip6_dotint = false,
                         ("edns0", _) => cfg.edns0 = true,
                         ("single-request", _) => cfg.single_request = true,
-                        ("single-request-reopen", _)
-                            => cfg.single_request_reopen = true,
+                        ("single-request-reopen", _) => cfg.single_request_reopen = true,
                         ("no-tld-query", _) => cfg.no_tld_query = true,
                         ("use-vc", _) => cfg.use_vc = true,
                         // Ignore unknown options
