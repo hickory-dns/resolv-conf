@@ -77,6 +77,10 @@ pub fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
         // All that dances above to allow invalid utf-8 inside the comments
         let mut words = from_utf8(line)
             .map_err(|e| InvalidUtf8(lineno, e))?
+            // ignore everything after ';' or '#'
+            .split(|c| c == ';' || c == '#')
+            .next()
+            .ok_or_else(|| InvalidValue(lineno))?
             .split_whitespace();
         let keyword = match words.next() {
             Some(x) => x,
