@@ -19,6 +19,12 @@ quick_error!{
             display("directive options at line {} contains invalid \
                 value of some option", line)
         }
+        InvalidOption(line: usize) {
+            display("option at line {} is not recognized", line)
+        }
+        InvalidDirective(line: usize) {
+            display("directive at line {} is not recognized", line)
+        }
         InvalidIp(line: usize, err: AddrParseError) {
             display("directive at line {} contains invalid IP: {}", line, err)
         }
@@ -152,13 +158,11 @@ pub fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                         ("single-request-reopen", _) => cfg.single_request_reopen = true,
                         ("no-tld-query", _) => cfg.no_tld_query = true,
                         ("use-vc", _) => cfg.use_vc = true,
-                        // Ignore unknown options
-                        _ => {}
+                        _ => return Err(InvalidOption(lineno)),
                     }
                 }
             }
-            // Ignore unknown directives
-            _ => {}
+            _ => return Err(InvalidDirective(lineno)),
         }
     }
     Ok(cfg)
