@@ -1,10 +1,9 @@
-===========
 Resolv-conf
 ===========
 
-:Status: Alpha
+**Status: Beta**
 
-A ``/etc/resolv.conf`` parser crate for rust. It uses nom_ for heavy-lifting.
+A ``/etc/resolv.conf`` parser crate for rust.
 
 Why?
 ====
@@ -13,7 +12,6 @@ Why?
 2. I needed one to make dns resolver for rotor_
 
 .. _rotor: http://github.com/tailhook/rotor
-.. _nom: https://github.com/Geal/nom
 
 
 License
