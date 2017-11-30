@@ -15,7 +15,7 @@ use std::str::FromStr;
 pub use grammar::ParseError;
 
 /// A network, that is an IP address and the mask
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Network {
     // Address netmask
     V4(Ipv4Addr, Ipv4Addr),
@@ -118,7 +118,7 @@ impl From<std::net::AddrParseError> for AddrParseError {
 /// Encompasses the nameserver configuration
 ///
 /// Currently the options and defaults match those of linux/glibc
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Config {
     /// List of nameservers
     pub nameservers: Vec<Ip>,
