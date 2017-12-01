@@ -1,8 +1,25 @@
 use {grammar, Ip, Network, ParseError};
 
-/// Encompasses the nameserver configuration
+/// Represent a resolver configuration, as described in `man 5 resolv.conf` on linux.
+/// The options and defaults match those in this `man` page.
 ///
-/// Currently the options and defaults match those of linux/glibc
+/// ```rust
+/// extern crate resolv_conf;
+///
+/// use std::net::Ipv4Addr;
+/// use resolv_conf::{Config, Ip};
+///
+/// fn main() {
+///     // Create a new config
+///     let mut config = Config::new();
+///     config.nameservers.push(Ip::V4(Ipv4Addr::new(8, 8, 8, 8)));
+///     config.search.push("example.com".into());
+///
+///     // Parse a config
+///     let parsed = Config::parse("nameserver 8.8.8.8\nsearch example.com").unwrap();
+///     assert_eq!(parsed, config);
+/// }
+/// ```
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Config {
     /// List of nameservers
@@ -44,6 +61,34 @@ pub struct Config {
 }
 
 impl Config {
+    /// Create a new `Config` object with default values.
+    ///
+    /// ```rust
+    /// # extern crate resolv_conf;
+    /// use resolv_conf::Config;
+    /// # fn main() {
+    /// assert_eq!(
+    ///     Config::new(),
+    ///     Config {
+    ///         nameservers: vec![],
+    ///         search: vec![],
+    ///         sortlist: vec![],
+    ///         debug: false,
+    ///         ndots: 1,
+    ///         timeout: 5,
+    ///         attempts: 2,
+    ///         rotate: false,
+    ///         no_check_names: false,
+    ///         inet6: false,
+    ///         ip6_bytestring: false,
+    ///         ip6_dotint: false,
+    ///         edns0: false,
+    ///         single_request: false,
+    ///         single_request_reopen: false,
+    ///         no_tld_query: false,
+    ///         use_vc: false,
+    ///     });
+    /// # }
     pub fn new() -> Config {
         Config {
             nameservers: Vec::new(),
@@ -65,6 +110,26 @@ impl Config {
             use_vc: false,
         }
     }
+
+    /// Parse a buffer and return the corresponding `Config` object.
+    ///
+    /// ```rust
+    /// # extern crate resolv_conf;
+    /// use resolv_conf::{Ip, Config};
+    /// # fn main() {
+    /// let config_str = "# /etc/resolv.conf
+    /// nameserver  8.8.8.8
+    /// nameserver  8.8.4.4
+    /// search      example.com sub.example.com
+    /// options     ndots:8 attempts:8";
+    ///
+    /// // Parse the config
+    /// let parsed_config = Config::parse(&config_str).expect("Failed to parse config");
+    ///
+    /// // Print the config
+    /// println!("{:?}", parsed_config);
+    /// # }
+    /// ```
     pub fn parse<T: AsRef<[u8]>>(buf: T) -> Result<Config, ParseError> {
         grammar::parse(buf.as_ref())
     }

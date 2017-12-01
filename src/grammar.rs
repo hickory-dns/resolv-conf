@@ -7,27 +7,36 @@ quick_error!{
     /// Error while parsing resolv.conf file
     #[derive(Debug)]
     pub enum ParseError {
+        /// Error that may be returned when the string to parse contains invalid UTF-8 sequences
         InvalidUtf8(line: usize, err: Utf8Error) {
             display("bad unicode at line {}: {}", line, err)
             cause(err)
         }
+        /// Error returned a value for a given directive is invalid.
+        /// This can also happen when the value is missing, if the directive requires a value.
         InvalidValue(line: usize) {
             display("directive at line {} is improperly formatted \
                 or contains invalid value", line)
         }
+        /// Error returned when a value for a given option is invalid.
+        /// This can also happen when the value is missing, if the option requires a value.
         InvalidOptionValue(line: usize) {
             display("directive options at line {} contains invalid \
                 value of some option", line)
         }
+        /// Error returned when a invalid option is found.
         InvalidOption(line: usize) {
             display("option at line {} is not recognized", line)
         }
+        /// Error returned when a invalid directive is found.
         InvalidDirective(line: usize) {
             display("directive at line {} is not recognized", line)
         }
+        /// Error returned when a value cannot be parsed an an IP address.
         InvalidIp(line: usize, err: AddrParseError) {
             display("directive at line {} contains invalid IP: {}", line, err)
         }
+        /// Error returned when there is extra data at the end of a line.
         ExtraData(line: usize) {
             display("extra data at the end of the line {}", line)
         }
