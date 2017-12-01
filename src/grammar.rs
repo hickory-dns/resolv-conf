@@ -1,7 +1,7 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::str::{Utf8Error, from_utf8};
 
-use {AddrParseError, Config, Ip, Network};
+use {AddrParseError, Config, Network};
 
 quick_error!{
     /// Error while parsing resolv.conf file
@@ -141,7 +141,8 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                 let srv = words
                     .next()
                     .ok_or_else(|| InvalidValue(lineno))
-                    .map(|addr| Ip::parse(addr).map_err(|e| InvalidIp(lineno, e)))??;
+                    .map(|addr| addr.parse()
+                        .map_err(|e| InvalidIp(lineno, e)))??;
                 cfg.nameservers.push(srv);
                 if words.next().is_some() {
                     return Err(ExtraData(lineno));

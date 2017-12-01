@@ -7,7 +7,7 @@
 //! extern crate resolv_conf;
 //!
 //! use std::net::{Ipv4Addr, Ipv6Addr};
-//! use resolv_conf::{Ip, Config, Network};
+//! use resolv_conf::{ScopedIp, Config, Network};
 //!
 //! fn main() {
 //!     let config_str = "
@@ -32,10 +32,10 @@
 //!     // We can build configs manually as well, either directly or with Config::new()
 //!     let expected_config = Config {
 //!         nameservers: vec![
-//!             Ip::V6(Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8888), None),
-//!             Ip::V6(Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8844), None),
-//!             Ip::V4(Ipv4Addr::new(8, 8, 8, 8)),
-//!             Ip::V4(Ipv4Addr::new(8, 8, 4, 4)),
+//!             ScopedIp::V6(Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8888), None),
+//!             ScopedIp::V6(Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8844), None),
+//!             ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)),
+//!             ScopedIp::V4(Ipv4Addr::new(8, 8, 4, 4)),
 //!         ],
 //!         search: vec![String::from("example.com"), String::from("sub.example.com")],
 //!         sortlist: vec![
@@ -96,5 +96,5 @@ mod ip;
 mod config;
 
 pub use grammar::ParseError;
-pub use ip::{AddrParseError, Ip, Network};
+pub use ip::{AddrParseError, ScopedIp, Network};
 pub use config::Config;

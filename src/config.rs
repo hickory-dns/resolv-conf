@@ -1,4 +1,4 @@
-use {grammar, Ip, Network, ParseError};
+use {grammar, ScopedIp, Network, ParseError};
 
 /// Represent a resolver configuration, as described in `man 5 resolv.conf` on linux.
 /// The options and defaults match those in this `man` page.
@@ -7,12 +7,12 @@ use {grammar, Ip, Network, ParseError};
 /// extern crate resolv_conf;
 ///
 /// use std::net::Ipv4Addr;
-/// use resolv_conf::{Config, Ip};
+/// use resolv_conf::{Config, ScopedIp};
 ///
 /// fn main() {
 ///     // Create a new config
 ///     let mut config = Config::new();
-///     config.nameservers.push(Ip::V4(Ipv4Addr::new(8, 8, 8, 8)));
+///     config.nameservers.push(ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)));
 ///     config.search.push("example.com".into());
 ///
 ///     // Parse a config
@@ -23,7 +23,7 @@ use {grammar, Ip, Network, ParseError};
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Config {
     /// List of nameservers
-    pub nameservers: Vec<Ip>,
+    pub nameservers: Vec<ScopedIp>,
     /// List of suffixes to append to name when it doesn't contain ndots
     pub search: Vec<String>,
     /// List of preferred addresses
@@ -115,7 +115,7 @@ impl Config {
     ///
     /// ```rust
     /// # extern crate resolv_conf;
-    /// use resolv_conf::{Ip, Config};
+    /// use resolv_conf::{ScopedIp, Config};
     /// # fn main() {
     /// let config_str = "# /etc/resolv.conf
     /// nameserver  8.8.8.8

@@ -15,55 +15,56 @@ pub enum Network {
 /// Represent an IP address. This type is similar to `std::net::IpAddr` but it supports IPv6 scope
 /// identifiers.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum Ip {
+pub enum ScopedIp {
     /// Represent an IPv4 address
     V4(Ipv4Addr),
     /// Represent an IPv6 and its scope identifier, if any
     V6(Ipv6Addr, Option<String>),
 }
 
-impl Into<IpAddr> for Ip {
+impl Into<IpAddr> for ScopedIp {
     fn into(self) -> IpAddr {
         match self {
-            Ip::V4(ip) => IpAddr::from(ip),
-            Ip::V6(ip, _) => IpAddr::from(ip),
+            ScopedIp::V4(ip) => IpAddr::from(ip),
+            ScopedIp::V6(ip, _) => IpAddr::from(ip),
         }
     }
 }
 
-impl<'a> Into<IpAddr> for &'a Ip {
+impl<'a> Into<IpAddr> for &'a ScopedIp {
     fn into(self) -> IpAddr {
         match *self {
-            Ip::V4(ref ip) => IpAddr::from(*ip),
-            Ip::V6(ref ip, _) => IpAddr::from(*ip),
+            ScopedIp::V4(ref ip) => IpAddr::from(*ip),
+            ScopedIp::V6(ref ip, _) => IpAddr::from(*ip),
         }
     }
 }
 
-impl From<Ipv6Addr> for Ip {
+impl From<Ipv6Addr> for ScopedIp {
     fn from(value: Ipv6Addr) -> Self {
-        Ip::V6(value, None)
+        ScopedIp::V6(value, None)
     }
 }
 
-impl From<Ipv4Addr> for Ip {
+impl From<Ipv4Addr> for ScopedIp {
     fn from(value: Ipv4Addr) -> Self {
-        Ip::V4(value)
+        ScopedIp::V4(value)
     }
 }
 
-impl From<IpAddr> for Ip {
+impl From<IpAddr> for ScopedIp {
     fn from(value: IpAddr) -> Self {
         match value {
-            IpAddr::V4(ip) => Ip::from(ip),
-            IpAddr::V6(ip) => Ip::from(ip),
+            IpAddr::V4(ip) => ScopedIp::from(ip),
+            IpAddr::V6(ip) => ScopedIp::from(ip),
         }
     }
 }
 
-impl Ip {
+impl FromStr for ScopedIp {
+    type Err = AddrParseError;
     /// Parse a string representing an IP address.
-    pub fn parse(s: &str) -> Result<Ip, AddrParseError> {
+    fn from_str(s: &str) -> Result<ScopedIp, AddrParseError> {
         let mut parts = s.split('%');
         let addr = parts.next().unwrap();
         match IpAddr::from_str(addr) {
@@ -72,7 +73,7 @@ impl Ip {
                     // It's not a valid IPv4 address if it contains a '%'
                     Err(AddrParseError)
                 } else {
-                    Ok(Ip::from(ip))
+                    Ok(ScopedIp::from(ip))
                 }
             }
             Ok(IpAddr::V6(ip)) => if let Some(scope_id) = parts.next() {
@@ -84,9 +85,9 @@ impl Ip {
                         return Err(AddrParseError);
                     }
                 }
-                Ok(Ip::V6(ip, Some(scope_id.to_string())))
+                Ok(ScopedIp::V6(ip, Some(scope_id.to_string())))
             } else {
-                Ok(Ip::V6(ip, None))
+                Ok(ScopedIp::V6(ip, None))
             },
             Err(e) => Err(e.into()),
         }

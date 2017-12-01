@@ -1,6 +1,6 @@
 extern crate resolv_conf;
 
-use resolv_conf::{Ip, Network};
+use resolv_conf::{ScopedIp, Network};
 use std::path::Path;
 use std::io::Read;
 use std::fs::File;
@@ -16,8 +16,8 @@ fn test_comment() {
     resolv_conf::Config::parse("; junk").unwrap();
 }
 
-fn ip(s: &str) -> Ip {
-    Ip::parse(s).unwrap()
+fn ip(s: &str) -> ScopedIp {
+    s.parse().unwrap()
 }
 
 fn parse_str(s: &str) -> resolv_conf::Config {
@@ -90,28 +90,28 @@ fn test_multiple_options_on_one_line() {
 
 #[test]
 fn test_ip() {
-    let parsed = Ip::parse("FE80::C001:1DFF:FEE0:0%eth0").unwrap();
+    let parsed = ip("FE80::C001:1DFF:FEE0:0%eth0");
     let address = Ipv6Addr::new(0xfe80, 0, 0, 0, 0xc001, 0x1dff, 0xfee0, 0);
     let scope = "eth0".to_string();
-    assert_eq!(parsed, Ip::V6(address, Some(scope)));
+    assert_eq!(parsed, ScopedIp::V6(address, Some(scope)));
 
-    let parsed = Ip::parse("FE80::C001:1DFF:FEE0:0%1").unwrap();
+    let parsed = ip("FE80::C001:1DFF:FEE0:0%1");
     let address = Ipv6Addr::new(0xfe80, 0, 0, 0, 0xc001, 0x1dff, 0xfee0, 0);
     let scope = "1".to_string();
-    assert_eq!(parsed, Ip::V6(address, Some(scope)));
+    assert_eq!(parsed, ScopedIp::V6(address, Some(scope)));
 
-    let parsed = Ip::parse("FE80::C001:1DFF:FEE0:0").unwrap();
+    let parsed = ip("FE80::C001:1DFF:FEE0:0");
     let address = Ipv6Addr::new(0xfe80, 0, 0, 0, 0xc001, 0x1dff, 0xfee0, 0);
-    assert_eq!(parsed, Ip::V6(address, None));
+    assert_eq!(parsed, ScopedIp::V6(address, None));
 
-    assert!(Ip::parse("10.0.0.1%1").is_err());
-    assert!(Ip::parse("10.0.0.1%eth0").is_err());
-    assert!(Ip::parse("FE80::C001:1DFF:FEE0:0%").is_err());
-    assert!(Ip::parse("FE80::C001:1DFF:FEE0:0% ").is_err());
+    assert!("10.0.0.1%1".parse::<ScopedIp>().is_err());
+    assert!("10.0.0.1%eth0".parse::<ScopedIp>().is_err());
+    assert!("FE80::C001:1DFF:FEE0:0%".parse::<ScopedIp>().is_err());
+    assert!("FE80::C001:1DFF:FEE0:0% ".parse::<ScopedIp>().is_err());
 
-    let parsed = Ip::parse("192.168.10.1").unwrap();
+    let parsed = ip("192.168.10.1");
     let address = Ipv4Addr::new(192, 168, 10, 1);
-    assert_eq!(parsed, Ip::V4(address));
+    assert_eq!(parsed, ScopedIp::V4(address));
 }
 
 #[test]
@@ -157,8 +157,8 @@ fn parse_file<P: AsRef<Path>>(path: P) -> resolv_conf::Config {
 #[test]
 fn test_parse_simple_conf() {
     let mut config = resolv_conf::Config::new();
-    config.nameservers.push(Ip::V4(Ipv4Addr::new(8, 8, 8, 8)));
-    config.nameservers.push(Ip::V4(Ipv4Addr::new(8, 8, 4, 4)));
+    config.nameservers.push(ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)));
+    config.nameservers.push(ScopedIp::V4(Ipv4Addr::new(8, 8, 4, 4)));
     assert_eq!(config, parse_file("tests/resolv.conf-simple"));
 }
 
@@ -168,16 +168,16 @@ fn test_parse_linux_conf() {
     config.search.push("example.com".into());
     config.search.push("sub.example.com".into());
     config.nameservers = vec![
-        Ip::V6(
+        ScopedIp::V6(
             Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8888),
             None,
         ),
-        Ip::V6(
+        ScopedIp::V6(
             Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8844),
             None,
         ),
-        Ip::V4(Ipv4Addr::new(8, 8, 8, 8)),
-        Ip::V4(Ipv4Addr::new(8, 8, 4, 4)),
+        ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)),
+        ScopedIp::V4(Ipv4Addr::new(8, 8, 4, 4)),
     ];
     config.ndots = 8;
     config.timeout = 8;
@@ -202,16 +202,16 @@ fn test_parse_macos_conf() {
     config.search.push("example.com.".into());
     config.search.push("sub.example.com.".into());
     config.nameservers = vec![
-        Ip::V6(
+        ScopedIp::V6(
             Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8888),
             None,
         ),
-        Ip::V6(
+        ScopedIp::V6(
             Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8844),
             None,
         ),
-        Ip::V4(Ipv4Addr::new(8, 8, 8, 8)),
-        Ip::V4(Ipv4Addr::new(8, 8, 4, 4)),
+        ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)),
+        ScopedIp::V4(Ipv4Addr::new(8, 8, 4, 4)),
     ];
     config.ndots = 8;
     config.timeout = 8;
