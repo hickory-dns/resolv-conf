@@ -3,11 +3,12 @@ use std::fmt;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::str::FromStr;
 
-/// A network, that is an IP address and the mask
+/// A network, that is an IP address and a mask
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Network {
-    // Address netmask
+    /// Represent an IPv4 network address
     V4(Ipv4Addr, Ipv4Addr),
+    /// Represent an IPv6 network address
     V6(Ipv6Addr, Ipv6Addr),
 }
 
@@ -92,6 +93,7 @@ impl Ip {
     }
 }
 
+/// An error which can be returned when parsing an IP address.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AddrParseError;
 
