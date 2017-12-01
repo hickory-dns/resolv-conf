@@ -30,6 +30,15 @@ impl Into<IpAddr> for Ip {
     }
 }
 
+impl<'a> Into<IpAddr> for &'a Ip {
+    fn into(self) -> IpAddr {
+        match *self {
+            Ip::V4(ref ip) => IpAddr::from(*ip),
+            Ip::V6(ref ip, _) => IpAddr::from(*ip),
+        }
+    }
+}
+
 impl From<Ipv6Addr> for Ip {
     fn from(value: Ipv6Addr) -> Self {
         Ip::V6(value, None)
