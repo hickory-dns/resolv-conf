@@ -102,7 +102,7 @@ fn ip_v6_netw(val: &str) -> Result<Network, AddrParseError> {
     }
 }
 
-pub fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
+pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
     use self::ParseError::*;
     let mut cfg = Config::new();
     'lines: for (lineno, line) in bytes.split(|&x| x == b'\n').enumerate() {

@@ -1,4 +1,4 @@
-use {parse, Ip, Network, ParseError};
+use {grammar, Ip, Network, ParseError};
 
 /// Encompasses the nameserver configuration
 ///
@@ -66,6 +66,6 @@ impl Config {
         }
     }
     pub fn parse<T: AsRef<[u8]>>(buf: T) -> Result<Config, ParseError> {
-        parse(buf.as_ref())
+        grammar::parse(buf.as_ref())
     }
 }
