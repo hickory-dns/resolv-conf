@@ -35,30 +35,30 @@ fn test_basic_options() {
         vec!["localnet.*".to_string()]
     );
     assert_eq!(
-        parse_str("domain example.com.").search,
-        vec!["example.com.".to_string()]
+        parse_str("domain example.com.").domain,
+        Some(String::from("example.com."))
     );
 }
 
 #[test]
 fn test_extra_whitespace() {
     assert_eq!(
-        parse_str("domain       example.com.").search,
-        vec!["example.com.".to_string()]
+        parse_str("domain       example.com.").domain,
+        Some(String::from("example.com."))
     );
     assert_eq!(
-        parse_str("domain   example.com.   ").search,
-        vec!["example.com.".to_string()]
+        parse_str("domain   example.com.   ").domain,
+        Some(String::from("example.com."))
     );
     // hard tabs
     assert_eq!(
-        parse_str("	domain		example.com.		").search,
-        vec!["example.com.".to_string()]
+        parse_str("	domain		example.com.		").domain,
+        Some(String::from("example.com."))
     );
     // hard tabs + spaces
     assert_eq!(
-        parse_str(" 	domain  		example.com.	 	").search,
-        vec!["example.com.".to_string()]
+        parse_str(" 	domain  		example.com.	 	").domain,
+        Some(String::from("example.com."))
     );
 }
 
@@ -165,6 +165,7 @@ fn test_parse_simple_conf() {
 #[test]
 fn test_parse_linux_conf() {
     let mut config = resolv_conf::Config::new();
+    config.domain = Some(String::from("example.com"));
     config.search.push("example.com".into());
     config.search.push("sub.example.com".into());
     config.nameservers = vec![
@@ -199,6 +200,7 @@ fn test_parse_linux_conf() {
 #[test]
 fn test_parse_macos_conf() {
     let mut config = resolv_conf::Config::new();
+    config.domain = Some(String::from("example.com."));
     config.search.push("example.com.".into());
     config.search.push("sub.example.com.".into());
     config.nameservers = vec![

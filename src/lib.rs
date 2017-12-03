@@ -37,6 +37,7 @@
 //!             ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)),
 //!             ScopedIp::V4(Ipv4Addr::new(8, 8, 4, 4)),
 //!         ],
+//!         domain: Some(String::from("example.com")),
 //!         search: vec![String::from("example.com"), String::from("sub.example.com")],
 //!         sortlist: vec![
 //!             Network::V4(Ipv4Addr::new(130, 155, 160, 0), Ipv4Addr::new(255, 255, 240, 0)),

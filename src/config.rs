@@ -24,6 +24,8 @@ use {grammar, ScopedIp, Network, ParseError};
 pub struct Config {
     /// List of nameservers
     pub nameservers: Vec<ScopedIp>,
+    /// Domain to append to name when it doesn't contain ndots
+    pub domain: Option<String>,
     /// List of suffixes to append to name when it doesn't contain ndots
     pub search: Vec<String>,
     /// List of preferred addresses
@@ -71,6 +73,7 @@ impl Config {
     ///     Config::new(),
     ///     Config {
     ///         nameservers: vec![],
+    ///         domain: None,
     ///         search: vec![],
     ///         sortlist: vec![],
     ///         debug: false,
@@ -92,6 +95,7 @@ impl Config {
     pub fn new() -> Config {
         Config {
             nameservers: Vec::new(),
+            domain: None,
             search: Vec::new(),
             sortlist: Vec::new(),
             debug: false,

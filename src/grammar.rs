@@ -153,8 +153,7 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                     .next()
                     .and_then(|x| x.parse().ok())
                     .ok_or_else(|| InvalidValue(lineno))?;
-                cfg.search.clear();
-                cfg.search.push(dom);
+                cfg.domain = Some(dom);
                 if words.next().is_some() {
                     return Err(ExtraData(lineno));
                 }
