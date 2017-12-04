@@ -1,7 +1,6 @@
 extern crate resolv_conf;
 
-use resolv_conf::{ScopedIp, Network, Parser, Config};
-
+use resolv_conf::{ScopedIp, Network};
 use std::path::Path;
 use std::io::Read;
 use std::fs::File;
@@ -9,20 +8,20 @@ use std::net::{Ipv4Addr, Ipv6Addr};
 
 #[test]
 fn test_comment() {
-    Parser::Glibc.parse("#").unwrap();
-    Parser::Glibc.parse(";").unwrap();
-    Parser::Glibc.parse("#junk").unwrap();
-    Parser::Glibc.parse("# junk").unwrap();
-    Parser::Glibc.parse(";junk").unwrap();
-    Parser::Glibc.parse("; junk").unwrap();
+    resolv_conf::Config::parse("#").unwrap();
+    resolv_conf::Config::parse(";").unwrap();
+    resolv_conf::Config::parse("#junk").unwrap();
+    resolv_conf::Config::parse("# junk").unwrap();
+    resolv_conf::Config::parse(";junk").unwrap();
+    resolv_conf::Config::parse("; junk").unwrap();
 }
 
 fn ip(s: &str) -> ScopedIp {
     s.parse().unwrap()
 }
 
-fn parse_str(s: &str) -> Config {
-    Parser::Glibc.parse(s).unwrap()
+fn parse_str(s: &str) -> resolv_conf::Config {
+    resolv_conf::Config::parse(s).unwrap()
 }
 
 #[test]
@@ -65,17 +64,17 @@ fn test_extra_whitespace() {
 
 #[test]
 fn test_invalid_lines() {
-    assert!(Parser::Glibc.parse("nameserver 10.0.0.1%1").is_err());
-    assert!(Parser::Glibc.parse("nameserver 10.0.0.1.0").is_err());
-    assert!(Parser::Glibc.parse("Nameserver 10.0.0.1").is_err());
-    assert!(Parser::Glibc.parse("nameserver 10.0.0.1 domain foo.com").is_err());
-    assert!(Parser::Glibc.parse("invalid foo.com").is_err());
-    assert!(Parser::Glibc.parse("options ndots:1 foo:1").is_err());
+    assert!(resolv_conf::Config::parse("nameserver 10.0.0.1%1").is_err());
+    assert!(resolv_conf::Config::parse("nameserver 10.0.0.1.0").is_err());
+    assert!(resolv_conf::Config::parse("Nameserver 10.0.0.1").is_err());
+    assert!(resolv_conf::Config::parse("nameserver 10.0.0.1 domain foo.com").is_err());
+    assert!(resolv_conf::Config::parse("invalid foo.com").is_err());
+    assert!(resolv_conf::Config::parse("options ndots:1 foo:1").is_err());
 }
 
 #[test]
 fn test_empty_line() {
-    assert_eq!(parse_str(""), Config::new());
+    assert_eq!(parse_str(""), resolv_conf::Config::new());
 }
 
 #[test]
@@ -148,25 +147,25 @@ fn test_nameserver() {
     );
 }
 
-fn parse_file<P: AsRef<Path>>(parser: Parser, path: P) -> Config {
+fn parse_file<P: AsRef<Path>>(path: P) -> resolv_conf::Config {
     let mut data = String::new();
     let mut file = File::open(path).unwrap();
     file.read_to_string(&mut data).unwrap();
-    parser.parse(&data).unwrap()
+    resolv_conf::Config::parse(&data).unwrap()
 }
 
 #[test]
 fn test_parse_simple_conf() {
-    let mut config = Config::new();
+    let mut config = resolv_conf::Config::new();
     config.nameservers.push(ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)));
     config.nameservers.push(ScopedIp::V4(Ipv4Addr::new(8, 8, 4, 4)));
-    assert_eq!(config, parse_file(Parser::Glibc, "tests/resolv.conf-simple"));
+    assert_eq!(config, parse_file("tests/resolv.conf-simple"));
 }
 
 #[test]
 fn test_parse_linux_conf() {
-    let mut config = Config::new();
-    // config.domain = Some(String::from("example.com"));
+    let mut config = resolv_conf::Config::new();
+    config.domain = Some(String::from("example.com"));
     config.search.push("example.com".into());
     config.search.push("sub.example.com".into());
     config.nameservers = vec![
@@ -195,12 +194,12 @@ fn test_parse_linux_conf() {
         // This fails currently
         Network::V4(Ipv4Addr::new(130, 155, 0, 0), Ipv4Addr::new(255, 255, 0, 0)),
     ];
-    assert_eq!(config, parse_file(Parser::Glibc, "tests/resolv.conf-linux"));
+    assert_eq!(config, parse_file("tests/resolv.conf-linux"));
 }
 
 #[test]
 fn test_parse_macos_conf() {
-    let mut config = Config::new();
+    let mut config = resolv_conf::Config::new();
     config.domain = Some(String::from("example.com."));
     config.search.push("example.com.".into());
     config.search.push("sub.example.com.".into());
@@ -218,5 +217,6 @@ fn test_parse_macos_conf() {
     ];
     config.ndots = 8;
     config.timeout = 8;
-    assert_eq!(config, parse_file(Parser::MacOs, "tests/resolv.conf-macos"));
+    config.attempts = 8;
+    assert_eq!(config, parse_file("tests/resolv.conf-macos"));
 }

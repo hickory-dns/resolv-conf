@@ -1,5 +1,4 @@
-use {ScopedIp, Network};
-
+use {grammar, ScopedIp, Network, ParseError};
 
 /// Represent a resolver configuration, as described in `man 5 resolv.conf` on linux.
 /// The options and defaults match those in this `man` page.
@@ -15,6 +14,10 @@ use {ScopedIp, Network};
 ///     let mut config = Config::new();
 ///     config.nameservers.push(ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)));
 ///     config.search.push("example.com".into());
+///
+///     // Parse a config
+///     let parsed = Config::parse("nameserver 8.8.8.8\nsearch example.com").unwrap();
+///     assert_eq!(parsed, config);
 /// }
 /// ```
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -57,8 +60,6 @@ pub struct Config {
     pub no_tld_query: bool,
     /// Force using TCP for DNS resolution
     pub use_vc: bool,
-    /// Port to use be used for this resolver. This option applies only to Mac Os.
-    pub port: Option<u16>,
 }
 
 impl Config {
@@ -89,7 +90,6 @@ impl Config {
     ///         single_request_reopen: false,
     ///         no_tld_query: false,
     ///         use_vc: false,
-    ///         port: None,
     ///     });
     /// # }
     pub fn new() -> Config {
@@ -112,7 +112,29 @@ impl Config {
             single_request_reopen: false,
             no_tld_query: false,
             use_vc: false,
-            port: None,
         }
+    }
+
+    /// Parse a buffer and return the corresponding `Config` object.
+    ///
+    /// ```rust
+    /// # extern crate resolv_conf;
+    /// use resolv_conf::{ScopedIp, Config};
+    /// # fn main() {
+    /// let config_str = "# /etc/resolv.conf
+    /// nameserver  8.8.8.8
+    /// nameserver  8.8.4.4
+    /// search      example.com sub.example.com
+    /// options     ndots:8 attempts:8";
+    ///
+    /// // Parse the config
+    /// let parsed_config = Config::parse(&config_str).expect("Failed to parse config");
+    ///
+    /// // Print the config
+    /// println!("{:?}", parsed_config);
+    /// # }
+    /// ```
+    pub fn parse<T: AsRef<[u8]>>(buf: T) -> Result<Config, ParseError> {
+        grammar::parse(buf.as_ref())
     }
 }

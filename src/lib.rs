@@ -7,11 +7,13 @@
 //! extern crate resolv_conf;
 //!
 //! use std::net::{Ipv4Addr, Ipv6Addr};
-//! use resolv_conf::{ScopedIp, Config, Network, Parser};
+//! use resolv_conf::{ScopedIp, Config, Network};
 //!
 //! fn main() {
 //!     let config_str = "
 //! options ndots:8 timeout:8 attempts:8
+//!
+//! domain example.com
 //! search example.com sub.example.com
 //!
 //! nameserver 2001:4860:4860::8888
@@ -25,7 +27,7 @@
 //! sortlist 130.155.160.0/255.255.240.0 130.155.0.0";
 //!
 //!     // Parse the config.
-//!     let parsed_config = Parser::Glibc.parse(&config_str).expect("Failed to parse config");
+//!     let parsed_config = Config::parse(&config_str).expect("Failed to parse config");
 //!
 //!     // We can build configs manually as well, either directly or with Config::new()
 //!     let expected_config = Config {
@@ -35,7 +37,7 @@
 //!             ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)),
 //!             ScopedIp::V4(Ipv4Addr::new(8, 8, 4, 4)),
 //!         ],
-//!         domain: None,
+//!         domain: Some(String::from("example.com")),
 //!         search: vec![String::from("example.com"), String::from("sub.example.com")],
 //!         sortlist: vec![
 //!             Network::V4(Ipv4Addr::new(130, 155, 160, 0), Ipv4Addr::new(255, 255, 240, 0)),
@@ -55,7 +57,6 @@
 //!         single_request_reopen: false,
 //!         no_tld_query: true,
 //!         use_vc: false,
-//!         port: None,
 //!     };
 //!
 //!     // We can compare configurations, since resolv_conf::Config implements Eq
@@ -78,7 +79,7 @@
 //!     f.read_to_end(&mut buf).unwrap();
 //!
 //!     // Parse the buffer
-//!     let cfg = resolv_conf::Parser::Glibc.parse(&buf).unwrap();
+//!     let cfg = resolv_conf::Config::parse(&buf).unwrap();
 //!
 //!     // Print the config
 //!     println!("---- Parsed /etc/resolv.conf -----\n{:#?}\n", cfg);
@@ -95,6 +96,6 @@ mod grammar;
 mod ip;
 mod config;
 
-pub use grammar::{ParseError, Parser};
+pub use grammar::ParseError;
 pub use ip::{AddrParseError, ScopedIp, Network};
 pub use config::Config;
