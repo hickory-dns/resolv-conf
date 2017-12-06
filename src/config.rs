@@ -172,14 +172,15 @@ impl Config {
     /// assert_eq!(domains, vec![String::from("example.com"), String::from("sub.example.com")]);
     /// # }
     pub fn get_last_search_or_domain<'a>(&'a self) -> DomainIter<'a> {
-        match self.last_search {
-            LastSearch::Search => DomainIter::Search(
+        let domain_iter = match self.last_search {
+            LastSearch::Search => DomainIterInternal::Search(
                 self.get_search()
                     .and_then(|domains| Some(domains.into_iter())),
             ),
-            LastSearch::Domain => DomainIter::Domain(self.get_domain()),
-            LastSearch::None => DomainIter::None,
-        }
+            LastSearch::Domain => DomainIterInternal::Domain(self.get_domain()),
+            LastSearch::None => DomainIterInternal::None,
+        };
+        DomainIter(domain_iter)
     }
 
     /// Return the domain declared in the last "domain" directive.
@@ -205,21 +206,32 @@ impl Config {
     }
 }
 
-/// A iterator returned by [`Config.get_last_search_or_domain`](struct.Config.html#method.get_last_search_or_domain)
+/// An iterator returned by [`Config.get_last_search_or_domain`](struct.Config.html#method.get_last_search_or_domain)
 #[derive(Debug, Clone)]
-pub enum DomainIter<'a> {
-    Search(Option<Iter<'a, String>>),
-    Domain(Option<&'a String>),
-    None,
-}
+pub struct DomainIter<'a>(DomainIterInternal<'a>);
 
 impl<'a> Iterator for DomainIter<'a> {
     type Item = &'a String;
 
     fn next(&mut self) -> Option<Self::Item> {
+        self.0.next()
+    }
+}
+
+#[derive(Debug, Clone)]
+enum DomainIterInternal<'a> {
+    Search(Option<Iter<'a, String>>),
+    Domain(Option<&'a String>),
+    None,
+}
+
+impl<'a> Iterator for DomainIterInternal<'a> {
+    type Item = &'a String;
+
+    fn next(&mut self) -> Option<Self::Item> {
         match *self {
-            DomainIter::Search(Some(ref mut domains)) => domains.next(),
-            DomainIter::Domain(ref mut domain) => domain.take(),
+            DomainIterInternal::Search(Some(ref mut domains)) => domains.next(),
+            DomainIterInternal::Domain(ref mut domain) => domain.take(),
             _ => None,
         }
     }
