@@ -30,33 +30,36 @@
 //!     let parsed_config = Config::parse(&config_str).expect("Failed to parse config");
 //!
 //!     // We can build configs manually as well, either directly or with Config::new()
-//!     let expected_config = Config {
-//!         nameservers: vec![
-//!             ScopedIp::V6(Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8888), None),
-//!             ScopedIp::V6(Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8844), None),
-//!             ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)),
-//!             ScopedIp::V4(Ipv4Addr::new(8, 8, 4, 4)),
-//!         ],
-//!         search: vec![String::from("example.com"), String::from("sub.example.com")],
-//!         sortlist: vec![
-//!             Network::V4(Ipv4Addr::new(130, 155, 160, 0), Ipv4Addr::new(255, 255, 240, 0)),
-//!             Network::V4(Ipv4Addr::new(130, 155, 0, 0), Ipv4Addr::new(255, 255, 0, 0)),
-//!         ],
-//!         debug: false,
-//!         ndots: 8,
-//!         timeout: 8,
-//!         attempts: 8,
-//!         rotate: true,
-//!         no_check_names: false,
-//!         inet6: true,
-//!         ip6_bytestring: false,
-//!         ip6_dotint: false,
-//!         edns0: false,
-//!         single_request: false,
-//!         single_request_reopen: false,
-//!         no_tld_query: true,
-//!         use_vc: false,
-//!     };
+//!     let mut expected_config = Config::new();
+//!     expected_config.nameservers = vec![
+//!         ScopedIp::V6(Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8888), None),
+//!         ScopedIp::V6(Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8844), None),
+//!         ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)),
+//!         ScopedIp::V4(Ipv4Addr::new(8, 8, 4, 4)),
+//!     ];
+//!     expected_config.sortlist = vec![
+//!         Network::V4(Ipv4Addr::new(130, 155, 160, 0), Ipv4Addr::new(255, 255, 240, 0)),
+//!         Network::V4(Ipv4Addr::new(130, 155, 0, 0), Ipv4Addr::new(255, 255, 0, 0)),
+//!     ];
+//!     expected_config.debug = false;
+//!     expected_config.ndots = 8;
+//!     expected_config.timeout = 8;
+//!     expected_config.attempts = 8;
+//!     expected_config.rotate = true;
+//!     expected_config.no_check_names = false;
+//!     expected_config.inet6 = true;
+//!     expected_config.ip6_bytestring = false;
+//!     expected_config.ip6_dotint = false;
+//!     expected_config.edns0 = false;
+//!     expected_config.single_request = false;
+//!     expected_config.single_request_reopen = false;
+//!     expected_config.no_tld_query = true;
+//!     expected_config.use_vc = false;
+//!     expected_config.set_domain(String::from("example.com"));
+//!     expected_config.set_search(vec![
+//!         String::from("example.com"),
+//!         String::from("sub.example.com")
+//!     ]);
 //!
 //!     // We can compare configurations, since resolv_conf::Config implements Eq
 //!     assert_eq!(parsed_config, expected_config);
@@ -96,5 +99,5 @@ mod ip;
 mod config;
 
 pub use grammar::ParseError;
-pub use ip::{AddrParseError, ScopedIp, Network};
-pub use config::Config;
+pub use ip::{AddrParseError, Network, ScopedIp};
+pub use config::{Config, DomainIter};

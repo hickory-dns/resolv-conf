@@ -141,8 +141,7 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                 let srv = words
                     .next()
                     .ok_or_else(|| InvalidValue(lineno))
-                    .map(|addr| addr.parse()
-                        .map_err(|e| InvalidIp(lineno, e)))??;
+                    .map(|addr| addr.parse().map_err(|e| InvalidIp(lineno, e)))??;
                 cfg.nameservers.push(srv);
                 if words.next().is_some() {
                     return Err(ExtraData(lineno));
@@ -153,15 +152,13 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                     .next()
                     .and_then(|x| x.parse().ok())
                     .ok_or_else(|| InvalidValue(lineno))?;
-                cfg.search.clear();
-                cfg.search.push(dom);
+                cfg.set_domain(dom);
                 if words.next().is_some() {
                     return Err(ExtraData(lineno));
                 }
             }
             "search" => {
-                cfg.search.clear();
-                cfg.search.extend(words.map(|x| x.to_string()));
+                cfg.set_search(words.map(|x| x.to_string()).collect());
             }
             "sortlist" => {
                 cfg.sortlist.clear();

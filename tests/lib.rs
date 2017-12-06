@@ -1,6 +1,6 @@
 extern crate resolv_conf;
 
-use resolv_conf::{ScopedIp, Network};
+use resolv_conf::{Network, ScopedIp};
 use std::path::Path;
 use std::io::Read;
 use std::fs::File;
@@ -31,34 +31,34 @@ fn test_basic_options() {
         vec![ip("127.0.0.1")]
     );
     assert_eq!(
-        parse_str("search localnet.*").search,
-        vec!["localnet.*".to_string()]
+        parse_str("search localnet.*").get_search(),
+        Some(vec!["localnet.*".to_string()]).as_ref()
     );
     assert_eq!(
-        parse_str("domain example.com.").search,
-        vec!["example.com.".to_string()]
+        parse_str("domain example.com.").get_domain(),
+        Some(String::from("example.com.")).as_ref()
     );
 }
 
 #[test]
 fn test_extra_whitespace() {
     assert_eq!(
-        parse_str("domain       example.com.").search,
-        vec!["example.com.".to_string()]
+        parse_str("domain       example.com.").get_domain(),
+        Some(String::from("example.com.")).as_ref()
     );
     assert_eq!(
-        parse_str("domain   example.com.   ").search,
-        vec!["example.com.".to_string()]
+        parse_str("domain   example.com.   ").get_domain(),
+        Some(String::from("example.com.")).as_ref()
     );
     // hard tabs
     assert_eq!(
-        parse_str("	domain		example.com.		").search,
-        vec!["example.com.".to_string()]
+        parse_str("	domain		example.com.		").get_domain(),
+        Some(String::from("example.com.")).as_ref()
     );
     // hard tabs + spaces
     assert_eq!(
-        parse_str(" 	domain  		example.com.	 	").search,
-        vec!["example.com.".to_string()]
+        parse_str(" 	domain  		example.com.	 	").get_domain(),
+        Some(String::from("example.com.")).as_ref()
     );
 }
 
@@ -157,16 +157,20 @@ fn parse_file<P: AsRef<Path>>(path: P) -> resolv_conf::Config {
 #[test]
 fn test_parse_simple_conf() {
     let mut config = resolv_conf::Config::new();
-    config.nameservers.push(ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)));
-    config.nameservers.push(ScopedIp::V4(Ipv4Addr::new(8, 8, 4, 4)));
+    config
+        .nameservers
+        .push(ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)));
+    config
+        .nameservers
+        .push(ScopedIp::V4(Ipv4Addr::new(8, 8, 4, 4)));
     assert_eq!(config, parse_file("tests/resolv.conf-simple"));
 }
 
 #[test]
 fn test_parse_linux_conf() {
     let mut config = resolv_conf::Config::new();
-    config.search.push("example.com".into());
-    config.search.push("sub.example.com".into());
+    config.set_domain(String::from("example.com"));
+    config.set_search(vec!["example.com".into(), "sub.example.com".into()]);
     config.nameservers = vec![
         ScopedIp::V6(
             Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8888),
@@ -199,8 +203,8 @@ fn test_parse_linux_conf() {
 #[test]
 fn test_parse_macos_conf() {
     let mut config = resolv_conf::Config::new();
-    config.search.push("example.com.".into());
-    config.search.push("sub.example.com.".into());
+    config.set_domain(String::from("example.com."));
+    config.set_search(vec!["example.com.".into(), "sub.example.com.".into()]);
     config.nameservers = vec![
         ScopedIp::V6(
             Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8888),
