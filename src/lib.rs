@@ -93,6 +93,8 @@
 
 #[macro_use]
 extern crate quick_error;
+#[cfg(feature = "system")]
+extern crate hostname;
 
 mod grammar;
 mod ip;

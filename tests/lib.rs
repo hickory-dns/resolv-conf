@@ -4,7 +4,7 @@ use resolv_conf::{Network, ScopedIp};
 use std::path::Path;
 use std::io::Read;
 use std::fs::File;
-use std::net::{Ipv4Addr, Ipv6Addr};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 #[test]
 fn test_comment() {
@@ -221,4 +221,80 @@ fn test_parse_macos_conf() {
     config.timeout = 8;
     config.attempts = 8;
     assert_eq!(config, parse_file("tests/resolv.conf-macos"));
+}
+
+#[test]
+fn test_glibc_normalize() {
+    let mut config = resolv_conf::Config::new();
+    config.nameservers = vec![
+        ScopedIp::V6(
+            Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8888),
+            None,
+        ),
+        ScopedIp::V6(
+            Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8844),
+            None,
+        ),
+        ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)),
+        ScopedIp::V4(Ipv4Addr::new(8, 8, 4, 4)),
+    ];
+
+    config.set_search(vec![
+        "a.example.com".into(), 
+        "b.example.com".into(),
+        "c.example.com".into(),
+        "d.example.com".into(),
+        "e.example.com".into(),
+        "f.example.com".into(),
+        "g.example.com".into(),
+        "h.example.com".into(),
+    ]);
+
+    config.glibc_normalize();
+    assert_eq!(
+        vec![
+            ScopedIp::V6(
+                Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8888),
+                None,
+            ),
+            ScopedIp::V6(
+                Ipv6Addr::new(0x2001, 0x4860, 0x4860, 0, 0, 0, 0, 0x8844),
+                None,
+            ),
+            ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)),
+        ],
+        config.nameservers
+    );
+
+    assert_eq!(
+        Some(&vec![
+            "a.example.com".into(), 
+            "b.example.com".into(),
+            "c.example.com".into(),
+            "d.example.com".into(),
+            "e.example.com".into(),
+            "f.example.com".into()
+        ]),
+        config.get_search()
+    );
+}
+
+#[test]
+fn test_get_nameservers_or_local() {
+    let config = resolv_conf::Config::new();
+    assert_eq!(
+        vec![
+            ScopedIp::from(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))), 
+            ScopedIp::from(IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1))),
+        ],
+        config.get_nameservers_or_local()
+    );
+}
+
+#[test]
+#[cfg(feature = "system")]
+#[ignore]
+fn test_get_system_domain() {
+    let config = resolv_conf::Config::new();
+    assert_eq!(Some("lan".into()), config.get_system_domain());
 }

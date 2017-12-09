@@ -1,6 +1,13 @@
 use std::iter::{IntoIterator, Iterator};
 use std::slice::Iter;
 use {grammar, Network, ParseError, ScopedIp};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+
+#[cfg(feature = "system")]
+use hostname::get_hostname;
+
+const NAMESERVER_LIMIT:usize = 3;
+const SEARCH_LIMIT:usize = 6;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 enum LastSearch {
@@ -203,6 +210,45 @@ impl Config {
     pub fn set_search(&mut self, search: Vec<String>) {
         self.search = Some(search);
         self.last_search = LastSearch::Search;
+    }
+
+    /// Normalize config, limit nameservers max 3, domain max 6.
+    pub fn glibc_normalize(&mut self) {
+        self.nameservers.truncate(NAMESERVER_LIMIT);
+        self.search = self.search.take().map(|mut s| {
+            s.truncate(SEARCH_LIMIT); 
+            s
+        });
+    }
+
+    /// Get nameserver or on the local machine
+    pub fn get_nameservers_or_local(&self) -> Vec<ScopedIp> {
+        if self.nameservers.is_empty() {
+            vec![
+                ScopedIp::from(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))), 
+                ScopedIp::from(IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1))),
+            ]
+        } else {
+            self.nameservers.to_vec()
+        }
+    }
+
+    /// Get domain if not exists return hostname.
+    #[cfg(feature = "system")]
+    pub fn get_system_domain(&self) -> Option<String> {
+        if self.domain.is_some() {
+            return self.domain.clone();
+        }
+
+        get_hostname().and_then(|s| {
+            if let Some(pos) = s.find('.') {
+                let hn = s[pos + 1..].to_string();
+                if !hn.is_empty() {
+                    return Some(hn)
+                }
+            };
+            return None;
+        })
     }
 }
 
