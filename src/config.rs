@@ -212,11 +212,23 @@ impl Config {
         self.last_search = LastSearch::Search;
     }
 
-    /// Normalize config, limit nameservers max 3, domain max 6.
+    /// Normalize config according to glibc rulees
+    ///
+    /// Currently this method does the following things:
+    ///
+    /// 1. Truncates list of nameservers to 3 at max
+    /// 2. Truncates search list to 6 at max
+    ///
+    /// Other normalizations may be added in future as long as they hold true
+    /// for a particular GNU libc implementation.
+    ///
+    /// Note: this method is not called after parsing, because we think it's
+    /// not forward-compatible to rely on such small and ugly limits. Still,
+    /// it's useful to keep implementation as close to glibc as possible.
     pub fn glibc_normalize(&mut self) {
         self.nameservers.truncate(NAMESERVER_LIMIT);
         self.search = self.search.take().map(|mut s| {
-            s.truncate(SEARCH_LIMIT); 
+            s.truncate(SEARCH_LIMIT);
             s
         });
     }
@@ -225,7 +237,7 @@ impl Config {
     pub fn get_nameservers_or_local(&self) -> Vec<ScopedIp> {
         if self.nameservers.is_empty() {
             vec![
-                ScopedIp::from(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))), 
+                ScopedIp::from(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))),
                 ScopedIp::from(IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1))),
             ]
         } else {
@@ -233,7 +245,10 @@ impl Config {
         }
     }
 
-    /// Get domain if not exists return hostname.
+    /// Get domain from config or fallback to the suffix of a hostname
+    ///
+    /// This is how glibc finds out a hostname. This method requires
+    /// ``system`` feature enabled.
     #[cfg(feature = "system")]
     pub fn get_system_domain(&self) -> Option<String> {
         if self.domain.is_some() {
