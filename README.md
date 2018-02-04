@@ -3,15 +3,15 @@ Resolv-conf
 
 **Status: Beta**
 
-A ``/etc/resolv.conf`` parser crate for rust.
+A `/etc/resolv.conf` parser crate for rust.
 
 Why?
 ====
 
 1. There is no bare file parser in the crates.io at the moment
-2. I needed one to make dns resolver for rotor_
+2. I needed one to make dns resolver for [rotor]
 
-.. _rotor: http://github.com/tailhook/rotor
+[rotor]: http://github.com/tailhook/rotor
 
 
 License
