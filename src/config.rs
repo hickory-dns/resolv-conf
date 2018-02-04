@@ -17,8 +17,18 @@ enum LastSearch {
 }
 
 
-/// Represent a resolver configuration, as described in `man 5 resolv.conf` on linux.
-/// The options and defaults match those in this `man` page.
+/// Represent a resolver configuration, as described in `man 5 resolv.conf`.
+/// The options and defaults match those in the linux `man` page.
+///
+/// Note: while most fields in the structure are public the `search` and
+/// `domain` fields must be accessed via methods. This is because there are
+/// few different ways to treat `domain` field. In GNU libc `search` and
+/// `domain` replace each other ([`get_last_search_or_domain`]).
+/// In MacOS `/etc/resolve/*` files `domain` is treated in entirely different
+/// way.
+///
+/// Also consider using [`glibc_normalize`] and [`get_system_domain`] to match
+/// behavior of GNU libc. (latter requires ``system`` feature enabled)
 ///
 /// ```rust
 /// extern crate resolv_conf;
@@ -37,6 +47,10 @@ enum LastSearch {
 ///     assert_eq!(parsed, config);
 /// }
 /// ```
+///
+/// [`glibc_normalize`]: #method.glibc_normalize
+/// [`get_last_search_or_domain`]: #method.get_last_search_or_domain
+/// [`get_system_domain`]: #method.get_system_domain
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Config {
     /// List of nameservers
