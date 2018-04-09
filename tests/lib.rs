@@ -298,3 +298,81 @@ fn test_get_system_domain() {
     let config = resolv_conf::Config::new();
     assert_eq!(Some("lan".into()), config.get_system_domain());
 }
+
+#[test]
+fn test_default_display() {
+    let original_config = resolv_conf::Config::new();
+    let output = original_config.to_string();
+    let restored_config = resolv_conf::Config::parse(&output).unwrap();
+
+    assert_eq!(original_config, restored_config);
+}
+
+#[test]
+fn test_non_default_display() {
+    let mut original_config = resolv_conf::Config::new();
+
+    original_config.nameservers = vec![
+        ip("192.168.0.94"),
+        ip("fe80::0123:4567:89ab:cdef"),
+        ip("fe80::0123:4567:89ab:cdef%zone"),
+    ];
+
+    original_config.sortlist = vec![
+        Network::V4(
+            "192.168.1.94".parse().unwrap(),
+            "255.255.252.0".parse().unwrap(),
+        ),
+        Network::V6("fe80::0123".parse().unwrap(), "fe80::cdef".parse().unwrap()),
+    ];
+
+    original_config.set_domain("my.domain".to_owned());
+
+    original_config.set_search(
+        vec!["my.domain", "alt.domain"]
+            .into_iter()
+            .map(str::to_owned)
+            .collect(),
+    );
+
+    original_config.debug = true;
+    original_config.ndots = 4;
+    original_config.timeout = 20;
+    original_config.attempts = 5;
+    original_config.rotate = true;
+    original_config.no_check_names = true;
+    original_config.inet6 = true;
+    original_config.ip6_bytestring = true;
+    original_config.ip6_dotint = true;
+    original_config.edns0 = true;
+    original_config.single_request = true;
+    original_config.single_request_reopen = true;
+    original_config.no_tld_query = true;
+    original_config.use_vc = true;
+
+    let output = original_config.to_string();
+    println!("Output:\n\n{}", output);
+    let restored_config = resolv_conf::Config::parse(&output).unwrap();
+
+    assert_eq!(original_config, restored_config);
+}
+
+#[test]
+fn test_display_preservers_last_search() {
+    let mut original_config = resolv_conf::Config::new();
+
+    original_config.set_search(
+        vec!["my.domain", "alt.domain"]
+            .into_iter()
+            .map(str::to_owned)
+            .collect(),
+    );
+
+    original_config.set_domain("my.domain".to_owned());
+
+    let output = original_config.to_string();
+    println!("Output:\n\n{}", output);
+    let restored_config = resolv_conf::Config::parse(&output).unwrap();
+
+    assert_eq!(original_config, restored_config);
+}

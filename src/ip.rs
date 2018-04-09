@@ -12,6 +12,15 @@ pub enum Network {
     V6(Ipv6Addr, Ipv6Addr),
 }
 
+impl fmt::Display for Network {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Network::V4(address, mask) => write!(fmt, "{}/{}", address, mask),
+            Network::V6(address, mask) => write!(fmt, "{}/{}", address, mask),
+        }
+    }
+}
+
 /// Represent an IP address. This type is similar to `std::net::IpAddr` but it supports IPv6 scope
 /// identifiers.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -90,6 +99,16 @@ impl FromStr for ScopedIp {
                 Ok(ScopedIp::V6(ip, None))
             },
             Err(e) => Err(e.into()),
+        }
+    }
+}
+
+impl fmt::Display for ScopedIp {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ScopedIp::V4(ref address) => address.fmt(fmt),
+            ScopedIp::V6(ref address, None) => address.fmt(fmt),
+            ScopedIp::V6(ref address, Some(ref scope)) => write!(fmt, "{}%{}", address, scope),
         }
     }
 }

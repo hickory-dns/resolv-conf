@@ -1,3 +1,4 @@
+use std::fmt;
 use std::iter::{IntoIterator, Iterator};
 use std::slice::Iter;
 use {grammar, Network, ParseError, ScopedIp};
@@ -278,6 +279,89 @@ impl Config {
             };
             return None;
         })
+    }
+}
+
+impl fmt::Display for Config {
+    fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
+        for nameserver in self.nameservers.iter() {
+            writeln!(fmt, "nameserver {}", nameserver)?;
+        }
+
+        if self.last_search != LastSearch::Domain {
+            if let Some(ref domain) = self.domain {
+                writeln!(fmt, "domain {}", domain)?;
+            }
+        }
+
+        if let Some(ref search) = self.search {
+            if !search.is_empty() {
+                write!(fmt, "search")?;
+                for suffix in search.iter() {
+                    write!(fmt, " {}", suffix)?;
+                }
+                writeln!(fmt)?;
+            }
+        }
+
+        if self.last_search == LastSearch::Domain {
+            if let Some(ref domain) = self.domain {
+                writeln!(fmt, "domain {}", domain)?;
+            }
+        }
+
+        if !self.sortlist.is_empty() {
+            write!(fmt, "sortlist")?;
+            for network in self.sortlist.iter() {
+                write!(fmt, " {}", network)?;
+            }
+            writeln!(fmt)?;
+        }
+
+        if self.debug {
+            writeln!(fmt, "options debug")?;
+        }
+        if self.ndots != 1 {
+            writeln!(fmt, "options ndots:{}", self.ndots)?;
+        }
+        if self.timeout != 5 {
+            writeln!(fmt, "options timeout:{}", self.timeout)?;
+        }
+        if self.attempts != 2 {
+            writeln!(fmt, "options attempts:{}", self.attempts)?;
+        }
+        if self.rotate {
+            writeln!(fmt, "options rotate")?;
+        }
+        if self.no_check_names {
+            writeln!(fmt, "options no-check-names")?;
+        }
+        if self.inet6 {
+            writeln!(fmt, "options inet6")?;
+        }
+        if self.ip6_bytestring {
+            writeln!(fmt, "options ip6-bytestring")?;
+        }
+        if self.ip6_dotint {
+            writeln!(fmt, "options ip6-dotint")?;
+        }
+        if self.edns0 {
+            writeln!(fmt, "options edns0")?;
+        }
+        if self.single_request {
+            writeln!(fmt, "options single-request")?;
+        }
+        if self.single_request_reopen {
+            writeln!(fmt, "options single-request-reopen")?;
+        }
+        if self.no_tld_query {
+            writeln!(fmt, "options no-tld-query")?;
+        }
+        if self.use_vc {
+            writeln!(fmt, "options use-vc")?;
+        }
+
+        Ok(())
     }
 }
 
