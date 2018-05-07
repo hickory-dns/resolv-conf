@@ -97,6 +97,8 @@ pub struct Config {
     pub no_tld_query: bool,
     /// Force using TCP for DNS resolution
     pub use_vc: bool,
+    /// OpenBSDs lookup file bind option
+    pub lookup_file_bind: bool,
 }
 
 impl Config {
@@ -147,6 +149,7 @@ impl Config {
             single_request_reopen: false,
             no_tld_query: false,
             use_vc: false,
+            lookup_file_bind: false,
         }
     }
 

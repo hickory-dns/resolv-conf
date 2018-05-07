@@ -224,6 +224,17 @@ fn test_parse_macos_conf() {
 }
 
 #[test]
+fn test_parse_openbsd_conf() {
+    let mut config = resolv_conf::Config::new();
+    config.set_domain(String::from("example.com"));
+    config.set_search(vec!["example.com".into()]);
+    config.nameservers = vec![
+        ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)),
+    ];
+    config.lookup_file_bind = true;
+    assert_eq!(config, parse_file("tests/resolv.conf-openbsd"));
+}
+#[test]
 fn test_glibc_normalize() {
     let mut config = resolv_conf::Config::new();
     config.nameservers = vec![

@@ -1,0 +1,4 @@
+domain example.com
+search example.com
+nameserver 8.8.8.8
+lookup file bind

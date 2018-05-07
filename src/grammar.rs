@@ -169,6 +169,19 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                     cfg.sortlist.push(netw);
                 }
             }
+            "lookup" => {
+                match words.next() {
+                    Some(x) => if x == "file" {
+                        match words.next() {
+                            Some(y) => if y == "bind" {
+                                cfg.lookup_file_bind = true;
+                            }
+                            None => cfg.lookup_file_bind = false,
+                        }
+                    }
+                    None => cfg.lookup_file_bind = false,
+                }
+            }
             "options" => {
                 for pair in words {
                     let mut iter = pair.splitn(2, ':');
