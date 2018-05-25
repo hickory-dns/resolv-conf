@@ -175,6 +175,30 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                         match words.next() {
                             Some(y) => if y == "bind" {
                                 cfg.lookup_file_bind = true;
+                            } else if y == "file " {
+                                cfg.lookup_file_bind = false;
+                            } else {
+                                cfg.lookup_file_bind = false;
+                            }
+                            None => cfg.lookup_file_bind = false,
+                        }
+                    } else if x == "bind" {
+                        match words.next() {
+                            Some(y) => if y == "file" {
+                                cfg.lookup_file_bind = false;
+                            } else if y == "bind" {
+                                cfg.lookup_file_bind = false;
+                            } else {
+                                cfg.lookup_file_bind = false;
+                            }
+                            None => cfg.lookup_file_bind = false,
+                        }
+                    } else {
+                        match words.next() {
+                            Some(y) => if y == "file" {
+                                cfg.lookup_file_bind = true;
+                            } else if y == "bind" {
+                                cfg.lookup_file_bind = false;
                             }
                             None => cfg.lookup_file_bind = false,
                         }
