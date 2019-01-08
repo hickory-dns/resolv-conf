@@ -1,6 +1,6 @@
 extern crate resolv_conf;
 
-use resolv_conf::{Network, ScopedIp};
+use resolv_conf::{Network, ScopedIp, Lookup, Family};
 use std::path::Path;
 use std::io::Read;
 use std::fs::File;
@@ -221,6 +221,46 @@ fn test_parse_macos_conf() {
     config.timeout = 8;
     config.attempts = 8;
     assert_eq!(config, parse_file("tests/resolv.conf-macos"));
+}
+
+#[test]
+fn test_openbsd_conf() {
+    let mut config = resolv_conf::Config::new();
+    config.nameservers = vec![
+        ScopedIp::V4(Ipv4Addr::new(8, 8, 8, 8)),
+        ScopedIp::V4(Ipv4Addr::new(8, 8, 4, 4)),
+    ];
+    config.lookup = vec![Lookup::File, Lookup::Bind];
+    assert_eq!(config, parse_file("tests/resolv.conf-openbsd"));
+}
+
+#[test]
+fn test_openbsd_grammar() {
+    let mut config = resolv_conf::Config::new();
+    config.lookup = vec![Lookup::File, Lookup::Bind];
+    assert_eq!(resolv_conf::Config::parse("lookup file bind").unwrap(), config);
+
+    let mut config = resolv_conf::Config::new();
+    config.lookup = vec![Lookup::Bind];
+    assert_eq!(resolv_conf::Config::parse("lookup bind").unwrap(), config);
+
+    let mut config = resolv_conf::Config::new();
+    config.lookup = vec![Lookup::Extra(String::from("unexpected"))];
+    assert_eq!(resolv_conf::Config::parse("lookup unexpected").unwrap(), config);
+
+    let mut config = resolv_conf::Config::new();
+    config.family = vec![Family::Inet4, Family::Inet6];
+    assert_eq!(resolv_conf::Config::parse("family inet4 inet6").unwrap(), config);
+
+    let mut config = resolv_conf::Config::new();
+    config.family = vec![Family::Inet4];
+    assert_eq!(resolv_conf::Config::parse("family inet4").unwrap(), config);
+
+    let mut config = resolv_conf::Config::new();
+    config.family = vec![Family::Inet6];
+    assert_eq!(resolv_conf::Config::parse("family inet6").unwrap(), config);
+
+    assert!(resolv_conf::Config::parse("family invalid").is_err());
 }
 
 #[test]

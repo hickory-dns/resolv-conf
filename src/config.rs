@@ -97,6 +97,10 @@ pub struct Config {
     pub no_tld_query: bool,
     /// Force using TCP for DNS resolution
     pub use_vc: bool,
+    /// The order in which databases should be searched during a lookup
+    pub lookup: Vec<Lookup>,
+    /// The order in which internet protocol families should be prefered
+    pub family: Vec<Family>,
 }
 
 impl Config {
@@ -147,6 +151,8 @@ impl Config {
             single_request_reopen: false,
             no_tld_query: false,
             use_vc: false,
+            lookup: Vec::new(),
+            family: Vec::new(),
         }
     }
 
@@ -394,4 +400,26 @@ impl<'a> Iterator for DomainIterInternal<'a> {
             _ => None,
         }
     }
+}
+
+/// The databases that should be searched during a lookup.
+/// This option is commonly found on openbsd.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Lookup {
+    /// Search for entries in /etc/hosts
+    File,
+    /// Query a domain name server
+    Bind,
+    /// A database we don't know yet
+    Extra(String),
+}
+
+/// The internet protocol family that is prefered.
+/// This option is commonly found on openbsd.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Family {
+    /// A A lookup for an ipv4 address
+    Inet4,
+    /// A AAAA lookup for an ipv6 address
+    Inet6,
 }

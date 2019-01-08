@@ -102,4 +102,4 @@ mod config;
 
 pub use grammar::ParseError;
 pub use ip::{AddrParseError, Network, ScopedIp};
-pub use config::{Config, DomainIter};
+pub use config::{Config, DomainIter, Lookup, Family};

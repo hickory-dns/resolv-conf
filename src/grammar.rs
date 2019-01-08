@@ -1,7 +1,7 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::str::{Utf8Error, from_utf8};
 
-use {AddrParseError, Config, Network};
+use {AddrParseError, Config, Network, Lookup, Family};
 
 quick_error!{
     /// Error while parsing resolv.conf file
@@ -201,6 +201,24 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                         ("no-tld-query", _) => cfg.no_tld_query = true,
                         ("use-vc", _) => cfg.use_vc = true,
                         _ => return Err(InvalidOption(lineno)),
+                    }
+                }
+            }
+            "lookup" => {
+                for word in words {
+                    match word {
+                        "file" => cfg.lookup.push(Lookup::File),
+                        "bind" => cfg.lookup.push(Lookup::Bind),
+                        extra => cfg.lookup.push(Lookup::Extra(extra.to_string())),
+                    }
+                }
+            }
+            "family" => {
+                for word in words {
+                    match word {
+                        "inet4" => cfg.family.push(Family::Inet4),
+                        "inet6" => cfg.family.push(Family::Inet6),
+                        _ => return Err(InvalidValue(lineno)),
                     }
                 }
             }
