@@ -98,8 +98,10 @@ pub struct Config {
     /// Force using TCP for DNS resolution
     pub use_vc: bool,
     /// The order in which databases should be searched during a lookup
+    /// **(openbsd-only)**
     pub lookup: Vec<Lookup>,
     /// The order in which internet protocol families should be prefered
+    /// **(openbsd-only)**
     pub family: Vec<Family>,
 }
 
