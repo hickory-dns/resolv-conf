@@ -29,6 +29,7 @@ quick_error!{
             display("option at line {} is not recognized", line)
         }
         /// Error returned when a invalid directive is found.
+        #[cfg(not(feature="no-strict"))]
         InvalidDirective(line: usize) {
             display("directive at line {} is not recognized", line)
         }
@@ -222,7 +223,12 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                     }
                 }
             }
+            #[cfg(not(feature="no-strict"))]
             _ => return Err(InvalidDirective(lineno)),
+
+            #[cfg(feature="no-strict")]
+            _ => /* ignore invalid directives when no-strict */ (),
+
         }
     }
     Ok(cfg)
