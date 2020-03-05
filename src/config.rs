@@ -4,9 +4,6 @@ use std::slice::Iter;
 use {grammar, Network, ParseError, ScopedIp};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-#[cfg(feature = "system")]
-use hostname::get_hostname;
-
 const NAMESERVER_LIMIT:usize = 3;
 const SEARCH_LIMIT:usize = 6;
 
@@ -278,14 +275,19 @@ impl Config {
             return self.domain.clone();
         }
 
-        get_hostname().and_then(|s| {
+        let hostname = match ::hostname::get().ok() {
+            Some(name) => name.into_string().ok(),
+            None => return None,
+        };
+
+        hostname.and_then(|s| {
             if let Some(pos) = s.find('.') {
                 let hn = s[pos + 1..].to_string();
                 if !hn.is_empty() {
                     return Some(hn)
                 }
             };
-            return None;
+            None
         })
     }
 }
