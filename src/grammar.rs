@@ -198,6 +198,8 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                         ("edns0", _) => cfg.edns0 = true,
                         ("single-request", _) => cfg.single_request = true,
                         ("single-request-reopen", _) => cfg.single_request_reopen = true,
+                        ("no-reload", _) => cfg.no_reload = true,
+                        ("trust-ad", _) => cfg.trust_ad =true,
                         ("no-tld-query", _) => cfg.no_tld_query = true,
                         ("use-vc", _) => cfg.use_vc = true,
                         _ => return Err(InvalidOption(lineno)),
