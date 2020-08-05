@@ -94,6 +94,10 @@ pub struct Config {
     pub no_tld_query: bool,
     /// Force using TCP for DNS resolution
     pub use_vc: bool,
+    /// Disable the automatic reloading of a changed configuration file
+    pub no_reload: bool,
+    /// Optionally send the AD (authenticated data) bit in queries
+    pub trust_ad: bool,
     /// The order in which databases should be searched during a lookup
     /// **(openbsd-only)**
     pub lookup: Vec<Lookup>,
@@ -150,6 +154,8 @@ impl Config {
             single_request_reopen: false,
             no_tld_query: false,
             use_vc: false,
+            no_reload: false,
+            trust_ad: false,
             lookup: Vec::new(),
             family: Vec::new(),
         }
@@ -369,6 +375,12 @@ impl fmt::Display for Config {
         }
         if self.use_vc {
             writeln!(fmt, "options use-vc")?;
+        }
+        if self.no_reload {
+            writeln!(fmt, "options no-reload")?;
+        }
+        if self.trust_ad {
+            writeln!(fmt, "options trust-ad")?;
         }
 
         Ok(())
