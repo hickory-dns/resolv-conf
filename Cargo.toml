@@ -9,6 +9,7 @@ keywords = ["dns", "unix", "conf", "resolv"]
 categories = ["parser-implementations"]
 homepage = "http://github.com/tailhook/resolv-conf"
 documentation = "https://docs.rs/resolv-conf/"
+repository = "http://github.com/tailhook/resolv-conf"
 version = "0.6.3"
 authors = ["paul@colomiets.name"]
 
@@ -22,4 +23,3 @@ system = ["hostname"]
 [lib]
 name = "resolv_conf"
 path = "src/lib.rs"
-
