@@ -41,6 +41,22 @@ fn test_basic_options() {
 }
 
 #[test]
+fn test_trust_ad() {
+    assert_eq!(
+        parse_str("options edns0 trust-ad").trust_ad,
+        true
+    );
+}
+
+#[test]
+fn test_no_reload() {
+    assert_eq!(
+        parse_str("options no-reload").no_reload,
+        true
+    );
+}
+
+#[test]
 fn test_extra_whitespace() {
     assert_eq!(
         parse_str("domain       example.com.").get_domain(),
@@ -280,7 +296,7 @@ fn test_glibc_normalize() {
     ];
 
     config.set_search(vec![
-        "a.example.com".into(), 
+        "a.example.com".into(),
         "b.example.com".into(),
         "c.example.com".into(),
         "d.example.com".into(),
@@ -308,7 +324,7 @@ fn test_glibc_normalize() {
 
     assert_eq!(
         Some(&vec![
-            "a.example.com".into(), 
+            "a.example.com".into(),
             "b.example.com".into(),
             "c.example.com".into(),
             "d.example.com".into(),
@@ -324,7 +340,7 @@ fn test_get_nameservers_or_local() {
     let config = resolv_conf::Config::new();
     assert_eq!(
         vec![
-            ScopedIp::from(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))), 
+            ScopedIp::from(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))),
             ScopedIp::from(IpAddr::V6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 1))),
         ],
         config.get_nameservers_or_local()
