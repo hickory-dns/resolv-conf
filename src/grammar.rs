@@ -10,7 +10,7 @@ quick_error!{
         /// Error that may be returned when the string to parse contains invalid UTF-8 sequences
         InvalidUtf8(line: usize, err: Utf8Error) {
             display("bad unicode at line {}: {}", line, err)
-            cause(err)
+            source(err)
         }
         /// Error returned a value for a given directive is invalid.
         /// This can also happen when the value is missing, if the directive requires a value.

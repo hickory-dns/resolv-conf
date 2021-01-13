@@ -14,7 +14,7 @@ version = "0.7.0"
 authors = ["paul@colomiets.name"]
 
 [dependencies]
-quick-error = "1.0.0"
+quick-error = "2.0.0"
 hostname = { version = "^0.3", optional = true }
 
 [features]
