@@ -10,7 +10,7 @@ quick_error!{
         /// Error that may be returned when the string to parse contains invalid UTF-8 sequences
         InvalidUtf8(line: usize, err: Utf8Error) {
             display("bad unicode at line {}: {}", line, err)
-            cause(err)
+            source(err)
         }
         /// Error returned a value for a given directive is invalid.
         /// This can also happen when the value is missing, if the directive requires a value.
@@ -199,6 +199,8 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                         ("edns0", _) => cfg.edns0 = true,
                         ("single-request", _) => cfg.single_request = true,
                         ("single-request-reopen", _) => cfg.single_request_reopen = true,
+                        ("no-reload", _) => cfg.no_reload = true,
+                        ("trust-ad", _) => cfg.trust_ad = true,
                         ("no-tld-query", _) => cfg.no_tld_query = true,
                         ("use-vc", _) => cfg.use_vc = true,
                         _ => return Err(InvalidOption(lineno)),

@@ -4,9 +4,6 @@ use std::slice::Iter;
 use {grammar, Network, ParseError, ScopedIp};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-#[cfg(feature = "system")]
-use hostname::get_hostname;
-
 const NAMESERVER_LIMIT:usize = 3;
 const SEARCH_LIMIT:usize = 6;
 
@@ -97,6 +94,10 @@ pub struct Config {
     pub no_tld_query: bool,
     /// Force using TCP for DNS resolution
     pub use_vc: bool,
+    /// Disable the automatic reloading of a changed configuration file
+    pub no_reload: bool,
+    /// Optionally send the AD (authenticated data) bit in queries
+    pub trust_ad: bool,
     /// The order in which databases should be searched during a lookup
     /// **(openbsd-only)**
     pub lookup: Vec<Lookup>,
@@ -153,6 +154,8 @@ impl Config {
             single_request_reopen: false,
             no_tld_query: false,
             use_vc: false,
+            no_reload: false,
+            trust_ad: false,
             lookup: Vec::new(),
             family: Vec::new(),
         }
@@ -278,14 +281,19 @@ impl Config {
             return self.domain.clone();
         }
 
-        get_hostname().and_then(|s| {
+        let hostname = match ::hostname::get().ok() {
+            Some(name) => name.into_string().ok(),
+            None => return None,
+        };
+
+        hostname.and_then(|s| {
             if let Some(pos) = s.find('.') {
                 let hn = s[pos + 1..].to_string();
                 if !hn.is_empty() {
                     return Some(hn)
                 }
             };
-            return None;
+            None
         })
     }
 }
@@ -367,6 +375,12 @@ impl fmt::Display for Config {
         }
         if self.use_vc {
             writeln!(fmt, "options use-vc")?;
+        }
+        if self.no_reload {
+            writeln!(fmt, "options no-reload")?;
+        }
+        if self.trust_ad {
+            writeln!(fmt, "options trust-ad")?;
         }
 
         Ok(())
