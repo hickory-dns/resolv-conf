@@ -19,6 +19,7 @@ hostname = { version = "^0.3", optional = true }
 
 [features]
 system = ["hostname"]
+strict = []
 
 [lib]
 name = "resolv_conf"
