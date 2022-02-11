@@ -12,6 +12,7 @@ documentation = "https://docs.rs/resolv-conf/"
 repository = "http://github.com/tailhook/resolv-conf"
 version = "0.7.0"
 authors = ["paul@colomiets.name"]
+edition = "2021"
 
 [dependencies]
 quick-error = "2.0.0"

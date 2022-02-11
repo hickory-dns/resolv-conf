@@ -1,7 +1,7 @@
 use std::fmt;
 use std::iter::{IntoIterator, Iterator};
 use std::slice::Iter;
-use {grammar, Network, ParseError, ScopedIp};
+use crate::{grammar, Network, ParseError, ScopedIp};
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
 const NAMESERVER_LIMIT:usize = 3;
