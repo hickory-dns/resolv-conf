@@ -1,11 +1,11 @@
 use std::fmt;
 use std::iter::{IntoIterator, Iterator};
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::slice::Iter;
 use {grammar, Network, ParseError, ScopedIp};
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 
-const NAMESERVER_LIMIT:usize = 3;
-const SEARCH_LIMIT:usize = 6;
+const NAMESERVER_LIMIT: usize = 3;
+const SEARCH_LIMIT: usize = 6;
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 enum LastSearch {
@@ -13,7 +13,6 @@ enum LastSearch {
     Domain,
     Search,
 }
-
 
 /// Represent a resolver configuration, as described in `man 5 resolv.conf`.
 /// The options and defaults match those in the linux `man` page.
@@ -104,6 +103,12 @@ pub struct Config {
     /// The order in which internet protocol families should be prefered
     /// **(openbsd-only)**
     pub family: Vec<Family>,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Config {
@@ -290,7 +295,7 @@ impl Config {
             if let Some(pos) = s.find('.') {
                 let hn = s[pos + 1..].to_string();
                 if !hn.is_empty() {
-                    return Some(hn)
+                    return Some(hn);
                 }
             };
             None
