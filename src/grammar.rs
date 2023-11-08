@@ -1,46 +1,38 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::str::{Utf8Error, from_utf8};
 
+use thiserror::Error;
+
 use {AddrParseError, Config, Network, Lookup, Family};
 
-quick_error!{
-    /// Error while parsing resolv.conf file
-    #[derive(Debug)]
-    pub enum ParseError {
-        /// Error that may be returned when the string to parse contains invalid UTF-8 sequences
-        InvalidUtf8(line: usize, err: Utf8Error) {
-            display("bad unicode at line {}: {}", line, err)
-            source(err)
-        }
-        /// Error returned a value for a given directive is invalid.
-        /// This can also happen when the value is missing, if the directive requires a value.
-        InvalidValue(line: usize) {
-            display("directive at line {} is improperly formatted \
-                or contains invalid value", line)
-        }
-        /// Error returned when a value for a given option is invalid.
-        /// This can also happen when the value is missing, if the option requires a value.
-        InvalidOptionValue(line: usize) {
-            display("directive options at line {} contains invalid \
-                value of some option", line)
-        }
-        /// Error returned when a invalid option is found.
-        InvalidOption(line: usize) {
-            display("option at line {} is not recognized", line)
-        }
-        /// Error returned when a invalid directive is found.
-        InvalidDirective(line: usize) {
-            display("directive at line {} is not recognized", line)
-        }
-        /// Error returned when a value cannot be parsed an an IP address.
-        InvalidIp(line: usize, err: AddrParseError) {
-            display("directive at line {} contains invalid IP: {}", line, err)
-        }
-        /// Error returned when there is extra data at the end of a line.
-        ExtraData(line: usize) {
-            display("extra data at the end of the line {}", line)
-        }
-    }
+/// Error while parsing resolv.conf file
+#[derive(Error, Debug)]
+pub enum ParseError {
+    /// Error that may be returned when the string to parse contains invalid UTF-8 sequences
+    #[error("bad unicode at line {line}: {err}")]
+    InvalidUtf8 { line: usize, err: Utf8Error },
+    /// Error returned a value for a given directive is invalid.
+    ///
+    /// This can also happen when the value is missing, if the directive requires a value.
+    #[error("directive at line {line} is improperly formatted or contains invalid value")]
+    InvalidValue { line: usize },
+    /// Error returned when a value for a given option is invalid.
+    ///
+    /// This can also happen when the value is missing, if the option requires a value.
+    #[error("directive options at line {line} contains invalid value of some option")]
+    InvalidOptionValue { line: usize },
+    /// Error returned when a invalid option is found.
+    #[error("option at line {line} is not recognized")]
+    InvalidOption { line: usize },
+    /// Error returned when a invalid directive is found.
+    #[error("directive at line {line} is not recognized")]
+    InvalidDirective { line: usize },
+    /// Error returned when a value cannot be parsed an an IP address.
+    #[error("directive at line {line} contains invalid IP: {err}")]
+    InvalidIp { line: usize, err: AddrParseError },
+    /// Error returned when there is extra data at the end of a line.
+    #[error("extra data at the end of the line {line}")]
+    ExtraData { line: usize },
 }
 
 fn ip_v4_netw(val: &str) -> Result<Network, AddrParseError> {
@@ -126,11 +118,11 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
         }
         // All that dances above to allow invalid utf-8 inside the comments
         let mut words = from_utf8(line)
-            .map_err(|e| InvalidUtf8(lineno, e))?
+            .map_err(|e| InvalidUtf8 { line: lineno, err: e })?
             // ignore everything after ';' or '#'
             .split(|c| c == ';' || c == '#')
             .next()
-            .ok_or_else(|| InvalidValue(lineno))?
+            .ok_or_else(|| InvalidValue{ line: lineno })?
             .split_whitespace();
         let keyword = match words.next() {
             Some(x) => x,
@@ -140,21 +132,21 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
             "nameserver" => {
                 let srv = words
                     .next()
-                    .ok_or_else(|| InvalidValue(lineno))
-                    .map(|addr| addr.parse().map_err(|e| InvalidIp(lineno, e)))??;
+                    .ok_or_else(|| InvalidValue{ line: lineno })
+                    .map(|addr| addr.parse().map_err(|e| InvalidIp { line: lineno, err: e }))??;
                 cfg.nameservers.push(srv);
                 if words.next().is_some() {
-                    return Err(ExtraData(lineno));
+                    return Err(ExtraData{ line: lineno });
                 }
             }
             "domain" => {
                 let dom = words
                     .next()
                     .and_then(|x| x.parse().ok())
-                    .ok_or_else(|| InvalidValue(lineno))?;
+                    .ok_or_else(|| InvalidValue{ line: lineno })?;
                 cfg.set_domain(dom);
                 if words.next().is_some() {
-                    return Err(ExtraData(lineno));
+                    return Err(ExtraData{ line: lineno });
                 }
             }
             "search" => {
@@ -165,7 +157,7 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                 for pair in words {
                     let netw = ip_v4_netw(pair)
                         .or_else(|_| ip_v6_netw(pair))
-                        .map_err(|e| InvalidIp(lineno, e))?;
+                        .map_err(|e| InvalidIp { line: lineno, err: e })?;
                     cfg.sortlist.push(netw);
                 }
             }
@@ -175,19 +167,19 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                     let key = iter.next().unwrap();
                     let value = iter.next();
                     if iter.next().is_some() {
-                        return Err(ExtraData(lineno));
+                        return Err(ExtraData{ line: lineno });
                     }
                     match (key, value) {
                         // TODO(tailhook) ensure that values are None?
                         ("debug", _) => cfg.debug = true,
                         ("ndots", Some(x)) => {
-                            cfg.ndots = x.parse().map_err(|_| InvalidOptionValue(lineno))?
+                            cfg.ndots = x.parse().map_err(|_| InvalidOptionValue{ line: lineno })?
                         }
                         ("timeout", Some(x)) => {
-                            cfg.timeout = x.parse().map_err(|_| InvalidOptionValue(lineno))?
+                            cfg.timeout = x.parse().map_err(|_| InvalidOptionValue{ line: lineno })?
                         }
                         ("attempts", Some(x)) => {
-                            cfg.attempts = x.parse().map_err(|_| InvalidOptionValue(lineno))?
+                            cfg.attempts = x.parse().map_err(|_| InvalidOptionValue{ line: lineno })?
                         }
                         ("rotate", _) => cfg.rotate = true,
                         ("no-check-names", _) => cfg.no_check_names = true,
@@ -202,7 +194,7 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                         ("trust-ad", _) => cfg.trust_ad = true,
                         ("no-tld-query", _) => cfg.no_tld_query = true,
                         ("use-vc", _) => cfg.use_vc = true,
-                        _ => return Err(InvalidOption(lineno)),
+                        _ => return Err(InvalidOption{ line: lineno }),
                     }
                 }
             }
@@ -220,11 +212,11 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                     match word {
                         "inet4" => cfg.family.push(Family::Inet4),
                         "inet6" => cfg.family.push(Family::Inet6),
-                        _ => return Err(InvalidValue(lineno)),
+                        _ => return Err(InvalidValue{ line: lineno }),
                     }
                 }
             }
-            _ => return Err(InvalidDirective(lineno)),
+            _ => return Err(InvalidDirective{ line: lineno }),
         }
     }
     Ok(cfg)

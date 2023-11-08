@@ -10,11 +10,11 @@ categories = ["parser-implementations"]
 homepage = "http://github.com/tailhook/resolv-conf"
 documentation = "https://docs.rs/resolv-conf/"
 repository = "http://github.com/tailhook/resolv-conf"
-version = "0.7.0"
+version = "0.8.0"
 authors = ["paul@colomiets.name"]
 
 [dependencies]
-quick-error = "2.0.0"
+thiserror = "1"
 hostname = { version = "^0.3", optional = true }
 
 [features]

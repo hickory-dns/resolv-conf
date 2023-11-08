@@ -91,8 +91,8 @@
 #![warn(missing_debug_implementations)]
 #![warn(missing_docs)]
 
-#[macro_use]
-extern crate quick_error;
+extern crate thiserror;
+
 #[cfg(feature = "system")]
 extern crate hostname;
 
