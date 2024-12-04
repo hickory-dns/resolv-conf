@@ -192,6 +192,7 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                         ("rotate", _) => cfg.rotate = true,
                         ("no-check-names", _) => cfg.no_check_names = true,
                         ("inet6", _) => cfg.inet6 = true,
+                        ("no-aaaa", _) => cfg.no_aaaa = true,
                         ("ip6-bytestring", _) => cfg.ip6_bytestring = true,
                         ("ip6-dotint", _) => cfg.ip6_dotint = true,
                         ("no-ip6-dotint", _) => cfg.ip6_dotint = false,
