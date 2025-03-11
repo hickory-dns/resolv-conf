@@ -3,42 +3,62 @@ use std::str::{Utf8Error, from_utf8};
 
 use {AddrParseError, Config, Network, Lookup, Family};
 
-quick_error!{
-    /// Error while parsing resolv.conf file
-    #[derive(Debug)]
-    pub enum ParseError {
-        /// Error that may be returned when the string to parse contains invalid UTF-8 sequences
-        InvalidUtf8(line: usize, err: Utf8Error) {
-            display("bad unicode at line {}: {}", line, err)
-            source(err)
+/// Error while parsing resolv.conf file
+#[derive(Debug)]
+pub enum ParseError {
+    /// Error that may be returned when the string to parse contains invalid UTF-8 sequences
+    InvalidUtf8(usize, Utf8Error),
+    /// Error returned a value for a given directive is invalid.
+    /// This can also happen when the value is missing, if the directive requires a value.
+    InvalidValue(usize),
+    /// Error returned when a value for a given option is invalid.
+    /// This can also happen when the value is missing, if the option requires a value.
+    InvalidOptionValue(usize),
+    /// Error returned when a invalid option is found.
+    InvalidOption(usize),
+    /// Error returned when a invalid directive is found.
+    InvalidDirective(usize),
+    /// Error returned when a value cannot be parsed an an IP address.
+    InvalidIp(usize, AddrParseError),
+    /// Error returned when there is extra data at the end of a line.
+    ExtraData(usize),
+}
+
+impl std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            ParseError::InvalidUtf8(line, err) => {
+                write!(f, "bad unicode at line {}: {}", line, err)
+            }
+            ParseError::InvalidValue(line) => write!(
+                f,
+                "directive at line {} is improperly formatted or contains invalid value",
+                line
+            ),
+            ParseError::InvalidOptionValue(line) => write!(
+                f,
+                "directive options at line {} contains invalid value of some option",
+                line
+            ),
+            ParseError::InvalidOption(line) => {
+                write!(f, "option at line {} is not recognized", line)
+            }
+            ParseError::InvalidDirective(line) => {
+                write!(f, "directive at line {} is not recognized", line)
+            }
+            ParseError::InvalidIp(line, err) => {
+                write!(f, "directive at line {} contains invalid IP: {}", line, err)
+            }
+            ParseError::ExtraData(line) => write!(f, "extra data at the end of the line {}", line),
         }
-        /// Error returned a value for a given directive is invalid.
-        /// This can also happen when the value is missing, if the directive requires a value.
-        InvalidValue(line: usize) {
-            display("directive at line {} is improperly formatted \
-                or contains invalid value", line)
-        }
-        /// Error returned when a value for a given option is invalid.
-        /// This can also happen when the value is missing, if the option requires a value.
-        InvalidOptionValue(line: usize) {
-            display("directive options at line {} contains invalid \
-                value of some option", line)
-        }
-        /// Error returned when a invalid option is found.
-        InvalidOption(line: usize) {
-            display("option at line {} is not recognized", line)
-        }
-        /// Error returned when a invalid directive is found.
-        InvalidDirective(line: usize) {
-            display("directive at line {} is not recognized", line)
-        }
-        /// Error returned when a value cannot be parsed an an IP address.
-        InvalidIp(line: usize, err: AddrParseError) {
-            display("directive at line {} contains invalid IP: {}", line, err)
-        }
-        /// Error returned when there is extra data at the end of a line.
-        ExtraData(line: usize) {
-            display("extra data at the end of the line {}", line)
+    }
+}
+
+impl std::error::Error for ParseError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            ParseError::InvalidUtf8(_, err) => Some(err),
+            _ => None,
         }
     }
 }
