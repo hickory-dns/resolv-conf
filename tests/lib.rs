@@ -1,10 +1,10 @@
 extern crate resolv_conf;
 
-use resolv_conf::{Network, ScopedIp, Lookup, Family};
-use std::path::Path;
-use std::io::Read;
+use resolv_conf::{Family, Lookup, Network, ScopedIp};
 use std::fs::File;
+use std::io::Read;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::path::Path;
 
 #[test]
 fn test_comment() {
@@ -42,18 +42,12 @@ fn test_basic_options() {
 
 #[test]
 fn test_trust_ad() {
-    assert_eq!(
-        parse_str("options edns0 trust-ad").trust_ad,
-        true
-    );
+    assert_eq!(parse_str("options edns0 trust-ad").trust_ad, true);
 }
 
 #[test]
 fn test_no_reload() {
-    assert_eq!(
-        parse_str("options no-reload").no_reload,
-        true
-    );
+    assert_eq!(parse_str("options no-reload").no_reload, true);
 }
 
 #[test]
@@ -254,7 +248,10 @@ fn test_openbsd_conf() {
 fn test_openbsd_grammar() {
     let mut config = resolv_conf::Config::new();
     config.lookup = vec![Lookup::File, Lookup::Bind];
-    assert_eq!(resolv_conf::Config::parse("lookup file bind").unwrap(), config);
+    assert_eq!(
+        resolv_conf::Config::parse("lookup file bind").unwrap(),
+        config
+    );
 
     let mut config = resolv_conf::Config::new();
     config.lookup = vec![Lookup::Bind];
@@ -262,11 +259,17 @@ fn test_openbsd_grammar() {
 
     let mut config = resolv_conf::Config::new();
     config.lookup = vec![Lookup::Extra(String::from("unexpected"))];
-    assert_eq!(resolv_conf::Config::parse("lookup unexpected").unwrap(), config);
+    assert_eq!(
+        resolv_conf::Config::parse("lookup unexpected").unwrap(),
+        config
+    );
 
     let mut config = resolv_conf::Config::new();
     config.family = vec![Family::Inet4, Family::Inet6];
-    assert_eq!(resolv_conf::Config::parse("family inet4 inet6").unwrap(), config);
+    assert_eq!(
+        resolv_conf::Config::parse("family inet4 inet6").unwrap(),
+        config
+    );
 
     let mut config = resolv_conf::Config::new();
     config.family = vec![Family::Inet4];

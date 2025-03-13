@@ -85,19 +85,21 @@ impl FromStr for ScopedIp {
                     Ok(ScopedIp::from(ip))
                 }
             }
-            Ok(IpAddr::V6(ip)) => if let Some(scope_id) = parts.next() {
-                if scope_id.is_empty() {
-                    return Err(AddrParseError);
-                }
-                for c in scope_id.chars() {
-                    if !c.is_alphanumeric() {
+            Ok(IpAddr::V6(ip)) => {
+                if let Some(scope_id) = parts.next() {
+                    if scope_id.is_empty() {
                         return Err(AddrParseError);
                     }
+                    for c in scope_id.chars() {
+                        if !c.is_alphanumeric() {
+                            return Err(AddrParseError);
+                        }
+                    }
+                    Ok(ScopedIp::V6(ip, Some(scope_id.to_string())))
+                } else {
+                    Ok(ScopedIp::V6(ip, None))
                 }
-                Ok(ScopedIp::V6(ip, Some(scope_id.to_string())))
-            } else {
-                Ok(ScopedIp::V6(ip, None))
-            },
+            }
             Err(e) => Err(e.into()),
         }
     }
@@ -123,8 +125,7 @@ impl fmt::Display for AddrParseError {
     }
 }
 
-impl Error for AddrParseError {
-}
+impl Error for AddrParseError {}
 
 impl From<::std::net::AddrParseError> for AddrParseError {
     fn from(_: ::std::net::AddrParseError) -> Self {
