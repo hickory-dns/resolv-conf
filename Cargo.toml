@@ -1,5 +1,6 @@
 [package]
 name = "resolv-conf"
+rust-version = "1.67"
 description = """The resolv.conf file parser"""
 license = "MIT OR Apache-2.0"
 readme = "README.md"
