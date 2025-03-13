@@ -1,8 +1,7 @@
-use std::io::Read;
 use std::fs::File;
+use std::io::Read;
 
 extern crate resolv_conf;
-
 
 fn main() {
     let mut buf = Vec::with_capacity(4096);

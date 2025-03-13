@@ -94,10 +94,10 @@
 #[cfg(feature = "system")]
 extern crate hostname;
 
+mod config;
 mod grammar;
 mod ip;
-mod config;
 
+pub use config::{Config, DomainIter, Family, Lookup};
 pub use grammar::ParseError;
 pub use ip::{AddrParseError, Network, ScopedIp};
-pub use config::{Config, DomainIter, Lookup, Family};

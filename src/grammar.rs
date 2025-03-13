@@ -1,7 +1,7 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
-use std::str::{Utf8Error, from_utf8};
+use std::str::{from_utf8, Utf8Error};
 
-use {AddrParseError, Config, Network, Lookup, Family};
+use {AddrParseError, Config, Family, Lookup, Network};
 
 /// Error while parsing resolv.conf file
 #[derive(Debug)]
@@ -118,14 +118,7 @@ fn ip_v6_netw(val: &str) -> Result<Network, AddrParseError> {
         Ok(Network::V6(
             ip,
             Ipv6Addr::new(
-                65_535,
-                65_535,
-                65_535,
-                65_535,
-                65_535,
-                65_535,
-                65_535,
-                65_535,
+                65_535, 65_535, 65_535, 65_535, 65_535, 65_535, 65_535, 65_535,
             ),
         ))
     }
