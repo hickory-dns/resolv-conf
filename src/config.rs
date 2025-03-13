@@ -1,5 +1,5 @@
 use std::fmt;
-use std::iter::{IntoIterator, Iterator};
+use std::iter::Iterator;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::slice::Iter;
 use {grammar, Network, ParseError, ScopedIp};
@@ -105,6 +105,12 @@ pub struct Config {
     pub family: Vec<Family>,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Config {
     /// Create a new `Config` object with default values.
     ///
@@ -203,12 +209,11 @@ impl Config {
     ///                            .collect::<Vec<String>>();
     /// assert_eq!(domains, vec![String::from("example.com"), String::from("sub.example.com")]);
     /// # }
-    pub fn get_last_search_or_domain<'a>(&'a self) -> DomainIter<'a> {
+    pub fn get_last_search_or_domain(&self) -> DomainIter<'_> {
         let domain_iter = match self.last_search {
-            LastSearch::Search => DomainIterInternal::Search(
-                self.get_search()
-                    .and_then(|domains| Some(domains.into_iter())),
-            ),
+            LastSearch::Search => {
+                DomainIterInternal::Search(self.get_search().map(|domains| domains.iter()))
+            }
             LastSearch::Domain => DomainIterInternal::Domain(self.get_domain()),
             LastSearch::None => DomainIterInternal::None,
         };

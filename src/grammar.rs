@@ -141,9 +141,9 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
         let mut words = from_utf8(line)
             .map_err(|e| InvalidUtf8(lineno, e))?
             // ignore everything after ';' or '#'
-            .split(|c| c == ';' || c == '#')
+            .split([';', '#'])
             .next()
-            .ok_or_else(|| InvalidValue(lineno))?
+            .ok_or(InvalidValue(lineno))?
             .split_whitespace();
         let keyword = match words.next() {
             Some(x) => x,
@@ -153,7 +153,7 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
             "nameserver" => {
                 let srv = words
                     .next()
-                    .ok_or_else(|| InvalidValue(lineno))
+                    .ok_or(InvalidValue(lineno))
                     .map(|addr| addr.parse().map_err(|e| InvalidIp(lineno, e)))??;
                 cfg.nameservers.push(srv);
                 if words.next().is_some() {
@@ -164,7 +164,7 @@ pub(crate) fn parse(bytes: &[u8]) -> Result<Config, ParseError> {
                 let dom = words
                     .next()
                     .and_then(|x| x.parse().ok())
-                    .ok_or_else(|| InvalidValue(lineno))?;
+                    .ok_or(InvalidValue(lineno))?;
                 cfg.set_domain(dom);
                 if words.next().is_some() {
                     return Err(ExtraData(lineno));
