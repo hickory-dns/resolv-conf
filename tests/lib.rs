@@ -42,12 +42,12 @@ fn test_basic_options() {
 
 #[test]
 fn test_trust_ad() {
-    assert_eq!(parse_str("options edns0 trust-ad").trust_ad, true);
+    assert!(parse_str("options edns0 trust-ad").trust_ad);
 }
 
 #[test]
 fn test_no_reload() {
-    assert_eq!(parse_str("options no-reload").no_reload, true);
+    assert!(parse_str("options no-reload").no_reload);
 }
 
 #[test]
@@ -93,9 +93,9 @@ fn test_multiple_options_on_one_line() {
     assert_eq!(config.ndots, 8);
     assert_eq!(config.timeout, 8);
     assert_eq!(config.attempts, 8);
-    assert_eq!(config.rotate, true);
-    assert_eq!(config.inet6, true);
-    assert_eq!(config.no_tld_query, true);
+    assert!(config.rotate);
+    assert!(config.inet6);
+    assert!(config.no_tld_query);
 }
 
 #[test]

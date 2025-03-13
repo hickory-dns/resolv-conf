@@ -31,18 +31,18 @@ pub enum ScopedIp {
     V6(Ipv6Addr, Option<String>),
 }
 
-impl Into<IpAddr> for ScopedIp {
-    fn into(self) -> IpAddr {
-        match self {
+impl From<ScopedIp> for IpAddr {
+    fn from(val: ScopedIp) -> Self {
+        match val {
             ScopedIp::V4(ip) => IpAddr::from(ip),
             ScopedIp::V6(ip, _) => IpAddr::from(ip),
         }
     }
 }
 
-impl<'a> Into<IpAddr> for &'a ScopedIp {
-    fn into(self) -> IpAddr {
-        match *self {
+impl From<&ScopedIp> for IpAddr {
+    fn from(val: &ScopedIp) -> Self {
+        match *val {
             ScopedIp::V4(ref ip) => IpAddr::from(*ip),
             ScopedIp::V6(ref ip, _) => IpAddr::from(*ip),
         }
