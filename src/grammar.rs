@@ -1,7 +1,7 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::str::{from_utf8, Utf8Error};
 
-use {AddrParseError, Config, Family, Lookup, Network};
+use crate::{AddrParseError, Config, Family, Lookup, Network};
 
 /// Error while parsing resolv.conf file
 #[derive(Debug)]
