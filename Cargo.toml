@@ -14,7 +14,7 @@ version = "0.7.0"
 authors = ["paul@colomiets.name"]
 
 [dependencies]
-hostname = { version = "^0.3", optional = true }
+hostname = { version = "0.4", optional = true }
 
 [features]
 system = ["hostname"]
