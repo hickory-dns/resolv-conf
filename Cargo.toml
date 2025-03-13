@@ -1,24 +1,17 @@
 [package]
 name = "resolv-conf"
-description = """
-    The resolv.conf file parser
-"""
-license = "MIT/Apache-2.0"
+description = """The resolv.conf file parser"""
+license = "MIT OR Apache-2.0"
 readme = "README.md"
 keywords = ["dns", "unix", "conf", "resolv"]
 categories = ["parser-implementations"]
-homepage = "http://github.com/tailhook/resolv-conf"
+homepage = "https://github.com/hickory-dns/resolv-conf"
 documentation = "https://docs.rs/resolv-conf/"
-repository = "http://github.com/tailhook/resolv-conf"
+repository = "https://github.com/hickory-dns/resolv-conf"
 version = "0.7.0"
-authors = ["paul@colomiets.name"]
 
 [dependencies]
 hostname = { version = "0.4", optional = true }
 
 [features]
 system = ["hostname"]
-
-[lib]
-name = "resolv_conf"
-path = "src/lib.rs"
