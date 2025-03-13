@@ -1,5 +1,6 @@
 [package]
 name = "resolv-conf"
+edition = "2021"
 rust-version = "1.67"
 description = """The resolv.conf file parser"""
 license = "MIT OR Apache-2.0"
