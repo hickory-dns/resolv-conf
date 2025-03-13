@@ -10,7 +10,7 @@ categories = ["parser-implementations"]
 homepage = "https://github.com/hickory-dns/resolv-conf"
 documentation = "https://docs.rs/resolv-conf/"
 repository = "https://github.com/hickory-dns/resolv-conf"
-version = "0.7.0"
+version = "0.7.1"
 
 [dependencies]
 hostname = { version = "0.4", optional = true }
