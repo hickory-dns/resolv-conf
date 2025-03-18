@@ -91,9 +91,6 @@
 #![warn(missing_debug_implementations)]
 #![warn(missing_docs)]
 
-#[cfg(feature = "system")]
-extern crate hostname;
-
 mod config;
 mod grammar;
 mod ip;

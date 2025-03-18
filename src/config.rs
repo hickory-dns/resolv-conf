@@ -280,26 +280,29 @@ impl Config {
     ///
     /// This is how glibc finds out a hostname. This method requires
     /// ``system`` feature enabled.
-    #[cfg(feature = "system")]
     pub fn get_system_domain(&self) -> Option<String> {
         if self.domain.is_some() {
             return self.domain.clone();
         }
 
-        let hostname = match ::hostname::get().ok() {
-            Some(name) => name.into_string().ok(),
-            None => return None,
-        };
+        #[link(name = "c")]
+        unsafe extern "C" {
+            fn gethostname(hostname: *mut u8, size: usize) -> i32;
+        }
 
-        hostname.and_then(|s| {
-            if let Some(pos) = s.find('.') {
-                let hn = s[pos + 1..].to_string();
-                if !hn.is_empty() {
-                    return Some(hn);
-                }
-            };
-            None
-        })
+        // This buffer is far larger than what most systems will ever allow, eg.
+        // linux uses 64 via _SC_HOST_NAME_MAX even though POSIX says the size
+        // must be _at least_ _POSIX_HOST_NAME_MAX (255), but other systems can
+        // be larger, so we just use a sufficiently sized buffer so we can defer
+        // a heap allocation until the last possible moment.
+        let mut hostname = [0u8; 1024];
+        unsafe {
+            if gethostname(hostname.as_mut_ptr(), std::mem::size_of_val(&hostname)) < 0 {
+                return None;
+            }
+        }
+
+        domain_from_host(&hostname)
     }
 }
 
@@ -443,4 +446,56 @@ pub enum Family {
     Inet4,
     /// A AAAA lookup for an ipv6 address
     Inet6,
+}
+
+/// Parses the domain name from a hostname, if available
+fn domain_from_host(hostname: &[u8]) -> Option<String> {
+    let mut dot = None;
+    let mut end = 0;
+
+    // Find the '.' while we look for the null terminator
+    loop {
+        if hostname[end] == b'.' {
+            if dot.is_none() {
+                dot = Some(end);
+            }
+        } else if hostname[end] == 0 {
+            break;
+        }
+
+        end += 1;
+    }
+
+    // No dot, no domain
+    let Some(dot) = dot else {
+        return None;
+    };
+
+    // '.' is at the end, so the domain would be empty
+    if end - dot < 2 {
+        return None;
+    }
+
+    match std::str::from_utf8(&hostname[dot + 1..end]) {
+        Ok(s) => Some(s.to_owned()),
+        Err(_) => None,
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::domain_from_host;
+    #[test]
+    fn parses_domain_name() {
+        assert!(domain_from_host(b"regular-hostname\0").is_none());
+        assert_eq!(
+            domain_from_host(b"with.domain-name\0").as_deref(),
+            Some("domain-name")
+        );
+        assert_eq!(
+            domain_from_host(b"with.multiple.dots\0").as_deref(),
+            Some("multiple.dots")
+        );
+        assert!(domain_from_host(b"hostname.\0").is_none());
+    }
 }
