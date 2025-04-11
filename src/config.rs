@@ -1,7 +1,7 @@
-use std::fmt;
 use std::iter::Iterator;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::slice::Iter;
+use std::{fmt, mem, str};
 
 use crate::{grammar, Network, ParseError, ScopedIp};
 
@@ -297,7 +297,7 @@ impl Config {
         // a heap allocation until the last possible moment.
         let mut hostname = [0u8; 1024];
         unsafe {
-            if gethostname(hostname.as_mut_ptr(), std::mem::size_of_val(&hostname)) < 0 {
+            if gethostname(hostname.as_mut_ptr(), mem::size_of_val(&hostname)) < 0 {
                 return None;
             }
         }
@@ -474,7 +474,7 @@ fn domain_from_host(hostname: &[u8]) -> Option<String> {
         return None;
     }
 
-    match std::str::from_utf8(&hostname[dot + 1..end]) {
+    match str::from_utf8(&hostname[dot + 1..end]) {
         Ok(s) => Some(s.to_owned()),
         Err(_) => None,
     }
