@@ -42,9 +42,9 @@ impl From<ScopedIp> for IpAddr {
 
 impl From<&ScopedIp> for IpAddr {
     fn from(val: &ScopedIp) -> Self {
-        match *val {
-            ScopedIp::V4(ref ip) => IpAddr::from(*ip),
-            ScopedIp::V6(ref ip, _) => IpAddr::from(*ip),
+        match val {
+            ScopedIp::V4(ip) => IpAddr::from(*ip),
+            ScopedIp::V6(ip, _) => IpAddr::from(*ip),
         }
     }
 }
@@ -107,10 +107,10 @@ impl FromStr for ScopedIp {
 
 impl fmt::Display for ScopedIp {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        match *self {
-            ScopedIp::V4(ref address) => address.fmt(fmt),
-            ScopedIp::V6(ref address, None) => address.fmt(fmt),
-            ScopedIp::V6(ref address, Some(ref scope)) => write!(fmt, "{address}%{scope}"),
+        match self {
+            ScopedIp::V4(address) => address.fmt(fmt),
+            ScopedIp::V6(address, None) => address.fmt(fmt),
+            ScopedIp::V6(address, Some(scope)) => write!(fmt, "{address}%{scope}"),
         }
     }
 }
