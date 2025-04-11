@@ -302,7 +302,7 @@ impl Config {
             }
         }
 
-        domain_from_host(&hostname)
+        domain_from_host(&hostname).map(|s| s.to_owned())
     }
 }
 
@@ -449,7 +449,7 @@ pub enum Family {
 }
 
 /// Parses the domain name from a hostname, if available
-fn domain_from_host(hostname: &[u8]) -> Option<String> {
+fn domain_from_host(hostname: &[u8]) -> Option<&str> {
     let mut start = None;
     for (i, b) in hostname.iter().copied().enumerate() {
         if b == b'.' && start.is_none() {
@@ -462,10 +462,7 @@ fn domain_from_host(hostname: &[u8]) -> Option<String> {
         return match start? {
             // Avoid empty domains
             start if i - start < 2 => None,
-            start => match str::from_utf8(&hostname[start + 1..i]) {
-                Ok(s) => Some(s.to_owned()),
-                Err(_) => None,
-            },
+            start => str::from_utf8(&hostname[start + 1..i]).ok(),
         };
     }
 
@@ -479,17 +476,14 @@ mod test {
     fn parses_domain_name() {
         assert!(domain_from_host(b"regular-hostname\0").is_none());
 
+        assert_eq!(domain_from_host(b"with.domain-name\0"), Some("domain-name"));
         assert_eq!(
-            domain_from_host(b"with.domain-name\0").as_deref(),
-            Some("domain-name")
-        );
-        assert_eq!(
-            domain_from_host(b"with.multiple.dots\0").as_deref(),
+            domain_from_host(b"with.multiple.dots\0"),
             Some("multiple.dots")
         );
 
         assert!(domain_from_host(b"hostname.\0").is_none());
-        assert_eq!(domain_from_host(b"host.a\0").as_deref(), Some("a"));
-        assert_eq!(domain_from_host(b"host.au\0").as_deref(), Some("au"));
+        assert_eq!(domain_from_host(b"host.a\0"), Some("a"));
+        assert_eq!(domain_from_host(b"host.au\0"), Some("au"));
     }
 }
