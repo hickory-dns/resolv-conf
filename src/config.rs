@@ -450,34 +450,26 @@ pub enum Family {
 
 /// Parses the domain name from a hostname, if available
 fn domain_from_host(hostname: &[u8]) -> Option<String> {
-    let mut domain_start = None;
-    let mut end = 0;
-
-    // Find the '.' while we look for the null terminator
-    loop {
-        if hostname[end] == b'.' {
-            if domain_start.is_none() {
-                domain_start = Some(end);
-            }
-        } else if hostname[end] == 0 {
-            break;
+    let mut start = None;
+    for (i, b) in hostname.iter().copied().enumerate() {
+        if b == b'.' && start.is_none() {
+            start = Some(i);
+            continue;
+        } else if b > 0 {
+            continue;
         }
 
-        end += 1;
+        return match start? {
+            // Avoid empty domains
+            start if i - start < 2 => None,
+            start => match str::from_utf8(&hostname[start + 1..i]) {
+                Ok(s) => Some(s.to_owned()),
+                Err(_) => None,
+            },
+        };
     }
 
-    // No dot, no domain
-    let domain_start = domain_start?;
-
-    // '.' is at the end, so the domain would be empty
-    if end - domain_start < 2 {
-        return None;
-    }
-
-    match str::from_utf8(&hostname[domain_start + 1..end]) {
-        Ok(s) => Some(s.to_owned()),
-        Err(_) => None,
-    }
+    None
 }
 
 #[cfg(test)]
