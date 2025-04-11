@@ -286,7 +286,8 @@ impl Config {
         }
 
         #[link(name = "c")]
-        unsafe extern "C" {
+        /*unsafe*/
+        extern "C" {
             fn gethostname(hostname: *mut u8, size: usize) -> i32;
         }
 
@@ -467,9 +468,7 @@ fn domain_from_host(hostname: &[u8]) -> Option<String> {
     }
 
     // No dot, no domain
-    let Some(dot) = dot else {
-        return None;
-    };
+    let dot = dot?;
 
     // '.' is at the end, so the domain would be empty
     if end - dot < 2 {
