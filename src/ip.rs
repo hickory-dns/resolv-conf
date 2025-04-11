@@ -15,8 +15,8 @@ pub enum Network {
 impl fmt::Display for Network {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Network::V4(address, mask) => write!(fmt, "{}/{}", address, mask),
-            Network::V6(address, mask) => write!(fmt, "{}/{}", address, mask),
+            Network::V4(address, mask) => write!(fmt, "{address}/{mask}"),
+            Network::V6(address, mask) => write!(fmt, "{address}/{mask}"),
         }
     }
 }
@@ -110,7 +110,7 @@ impl fmt::Display for ScopedIp {
         match *self {
             ScopedIp::V4(ref address) => address.fmt(fmt),
             ScopedIp::V6(ref address, None) => address.fmt(fmt),
-            ScopedIp::V6(ref address, Some(ref scope)) => write!(fmt, "{}%{}", address, scope),
+            ScopedIp::V6(ref address, Some(ref scope)) => write!(fmt, "{address}%{scope}"),
         }
     }
 }

@@ -402,7 +402,7 @@ fn test_non_default_display() {
     original_config.use_vc = true;
 
     let output = original_config.to_string();
-    println!("Output:\n\n{}", output);
+    println!("Output:\n\n{output}");
     let restored_config = resolv_conf::Config::parse(&output).unwrap();
 
     assert_eq!(original_config, restored_config);
@@ -422,7 +422,7 @@ fn test_display_preservers_last_search() {
     original_config.set_domain("my.domain".to_owned());
 
     let output = original_config.to_string();
-    println!("Output:\n\n{}", output);
+    println!("Output:\n\n{output}");
     let restored_config = resolv_conf::Config::parse(&output).unwrap();
 
     assert_eq!(original_config, restored_config);

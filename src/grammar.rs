@@ -27,29 +27,25 @@ pub enum ParseError {
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            ParseError::InvalidUtf8(line, err) => {
-                write!(f, "bad unicode at line {}: {}", line, err)
-            }
+            ParseError::InvalidUtf8(line, err) => write!(f, "bad unicode at line {line}: {err}"),
             ParseError::InvalidValue(line) => write!(
                 f,
-                "directive at line {} is improperly formatted or contains invalid value",
-                line
+                "directive at line {line} is improperly formatted or contains invalid value",
             ),
             ParseError::InvalidOptionValue(line) => write!(
                 f,
-                "directive options at line {} contains invalid value of some option",
-                line
+                "directive options at line {line} contains invalid value of some option",
             ),
             ParseError::InvalidOption(line) => {
-                write!(f, "option at line {} is not recognized", line)
+                write!(f, "option at line {line} is not recognized")
             }
             ParseError::InvalidDirective(line) => {
-                write!(f, "directive at line {} is not recognized", line)
+                write!(f, "directive at line {line} is not recognized")
             }
             ParseError::InvalidIp(line, err) => {
-                write!(f, "directive at line {} contains invalid IP: {}", line, err)
+                write!(f, "directive at line {line} contains invalid IP: {err}")
             }
-            ParseError::ExtraData(line) => write!(f, "extra data at the end of the line {}", line),
+            ParseError::ExtraData(line) => write!(f, "extra data at the end of line {line}"),
         }
     }
 }
