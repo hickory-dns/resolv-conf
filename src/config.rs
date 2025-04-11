@@ -309,12 +309,12 @@ impl Config {
 impl fmt::Display for Config {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         for nameserver in self.nameservers.iter() {
-            writeln!(fmt, "nameserver {}", nameserver)?;
+            writeln!(fmt, "nameserver {nameserver}")?;
         }
 
         if self.last_search != LastSearch::Domain {
             if let Some(ref domain) = self.domain {
-                writeln!(fmt, "domain {}", domain)?;
+                writeln!(fmt, "domain {domain}")?;
             }
         }
 
@@ -322,7 +322,7 @@ impl fmt::Display for Config {
             if !search.is_empty() {
                 write!(fmt, "search")?;
                 for suffix in search.iter() {
-                    write!(fmt, " {}", suffix)?;
+                    write!(fmt, " {suffix}")?;
                 }
                 writeln!(fmt)?;
             }
@@ -330,14 +330,14 @@ impl fmt::Display for Config {
 
         if self.last_search == LastSearch::Domain {
             if let Some(ref domain) = self.domain {
-                writeln!(fmt, "domain {}", domain)?;
+                writeln!(fmt, "domain {domain}")?;
             }
         }
 
         if !self.sortlist.is_empty() {
             write!(fmt, "sortlist")?;
             for network in self.sortlist.iter() {
-                write!(fmt, " {}", network)?;
+                write!(fmt, " {network}")?;
             }
             writeln!(fmt)?;
         }
