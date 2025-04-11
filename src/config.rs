@@ -313,12 +313,12 @@ impl fmt::Display for Config {
         }
 
         if self.last_search != LastSearch::Domain {
-            if let Some(ref domain) = self.domain {
+            if let Some(domain) = &self.domain {
                 writeln!(fmt, "domain {domain}")?;
             }
         }
 
-        if let Some(ref search) = self.search {
+        if let Some(search) = &self.search {
             if !search.is_empty() {
                 write!(fmt, "search")?;
                 for suffix in search.iter() {
@@ -329,7 +329,7 @@ impl fmt::Display for Config {
         }
 
         if self.last_search == LastSearch::Domain {
-            if let Some(ref domain) = self.domain {
+            if let Some(domain) = &self.domain {
                 writeln!(fmt, "domain {domain}")?;
             }
         }
@@ -418,9 +418,9 @@ impl<'a> Iterator for DomainIterInternal<'a> {
     type Item = &'a String;
 
     fn next(&mut self) -> Option<Self::Item> {
-        match *self {
-            DomainIterInternal::Search(Some(ref mut domains)) => domains.next(),
-            DomainIterInternal::Domain(ref mut domain) => domain.take(),
+        match self {
+            DomainIterInternal::Search(Some(domains)) => domains.next(),
+            DomainIterInternal::Domain(domain) => domain.take(),
             _ => None,
         }
     }
