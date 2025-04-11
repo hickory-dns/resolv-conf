@@ -1,5 +1,6 @@
 [package]
 name = "resolv-conf"
+version = "0.7.1"
 edition = "2021"
 rust-version = "1.61"
 description = """The resolv.conf file parser"""
@@ -10,4 +11,3 @@ categories = ["parser-implementations"]
 homepage = "https://github.com/hickory-dns/resolv-conf"
 documentation = "https://docs.rs/resolv-conf/"
 repository = "https://github.com/hickory-dns/resolv-conf"
-version = "0.7.1"
