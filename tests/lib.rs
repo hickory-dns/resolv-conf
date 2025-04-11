@@ -351,14 +351,6 @@ fn test_get_nameservers_or_local() {
 }
 
 #[test]
-#[cfg(feature = "system")]
-#[ignore]
-fn test_get_system_domain() {
-    let config = resolv_conf::Config::new();
-    assert_eq!(Some("lan".into()), config.get_system_domain());
-}
-
-#[test]
 fn test_default_display() {
     let original_config = resolv_conf::Config::new();
     let output = original_config.to_string();
