@@ -278,8 +278,7 @@ impl Config {
 
     /// Get domain from config or fallback to the suffix of a hostname
     ///
-    /// This is how glibc finds out a hostname. This method requires
-    /// ``system`` feature enabled.
+    /// This is how glibc finds out a hostname.
     pub fn get_system_domain(&self) -> Option<String> {
         if self.domain.is_some() {
             return self.domain.clone();
