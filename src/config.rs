@@ -486,6 +486,7 @@ mod test {
     #[test]
     fn parses_domain_name() {
         assert!(domain_from_host(b"regular-hostname\0").is_none());
+
         assert_eq!(
             domain_from_host(b"with.domain-name\0").as_deref(),
             Some("domain-name")
@@ -494,6 +495,9 @@ mod test {
             domain_from_host(b"with.multiple.dots\0").as_deref(),
             Some("multiple.dots")
         );
+
         assert!(domain_from_host(b"hostname.\0").is_none());
+        assert_eq!(domain_from_host(b"host.a\0").as_deref(), Some("a"));
+        assert_eq!(domain_from_host(b"host.au\0").as_deref(), Some("au"));
     }
 }
