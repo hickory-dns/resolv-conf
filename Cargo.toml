@@ -11,3 +11,8 @@ categories = ["parser-implementations"]
 homepage = "https://github.com/hickory-dns/resolv-conf"
 documentation = "https://docs.rs/resolv-conf/"
 repository = "https://github.com/hickory-dns/resolv-conf"
+
+[features]
+# dummy feature for backwards compatibility with 0.7.1;
+# can be dropped with the next breaking version
+system = []
