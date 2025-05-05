@@ -1,7 +1,7 @@
+use std::fmt;
 use std::iter::Iterator;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::slice::Iter;
-use std::{fmt, mem, str};
 
 use crate::{grammar, Network, ParseError, ScopedIp};
 
@@ -278,16 +278,12 @@ impl Config {
 
     /// Get domain from config or fallback to the suffix of a hostname
     ///
-    /// This is how glibc finds out a hostname.
+    /// This is how glibc finds out a hostname. This method requires
+    /// ``system`` feature enabled.
+    #[cfg(feature = "system")]
     pub fn get_system_domain(&self) -> Option<String> {
         if self.domain.is_some() {
             return self.domain.clone();
-        }
-
-        #[link(name = "c")]
-        /*unsafe*/
-        extern "C" {
-            fn gethostname(hostname: *mut u8, size: usize) -> i32;
         }
 
         // This buffer is far larger than what most systems will ever allow, eg.
@@ -296,10 +292,13 @@ impl Config {
         // be larger, so we just use a sufficiently sized buffer so we can defer
         // a heap allocation until the last possible moment.
         let mut hostname = [0u8; 1024];
-        unsafe {
-            if gethostname(hostname.as_mut_ptr(), mem::size_of_val(&hostname)) < 0 {
-                return None;
-            }
+
+        let result = unsafe {
+            libc::gethostname(hostname.as_mut_ptr() as *mut libc::c_char, hostname.len())
+        };
+
+        if result < 0 {
+            return None;
         }
 
         domain_from_host(&hostname).map(|s| s.to_owned())
@@ -449,6 +448,7 @@ pub enum Family {
 }
 
 /// Parses the domain name from a hostname, if available
+#[cfg(feature = "system")]
 fn domain_from_host(hostname: &[u8]) -> Option<&str> {
     let mut start = None;
     for (i, b) in hostname.iter().copied().enumerate() {
@@ -462,7 +462,7 @@ fn domain_from_host(hostname: &[u8]) -> Option<&str> {
         return match start? {
             // Avoid empty domains
             start if i - start < 2 => None,
-            start => str::from_utf8(&hostname[start + 1..i]).ok(),
+            start => std::str::from_utf8(&hostname[start + 1..i]).ok(),
         };
     }
 
@@ -471,8 +471,10 @@ fn domain_from_host(hostname: &[u8]) -> Option<&str> {
 
 #[cfg(test)]
 mod test {
+    #[cfg(feature = "system")]
     use super::domain_from_host;
     #[test]
+    #[cfg(feature = "system")]
     fn parses_domain_name() {
         assert!(domain_from_host(b"regular-hostname\0").is_none());
 
