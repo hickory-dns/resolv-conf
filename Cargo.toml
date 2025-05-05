@@ -16,4 +16,4 @@ repository = "https://github.com/hickory-dns/resolv-conf"
 libc = { version = "0.2", optional = true }
 
 [features]
-system = ["libc"]
+system = ["dep:libc"]
