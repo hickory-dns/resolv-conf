@@ -2,7 +2,7 @@
 name = "resolv-conf"
 version = "0.7.4"
 edition = "2021"
-rust-version = "1.61"
+rust-version = "1.63"
 description = """The resolv.conf file parser"""
 license = "MIT OR Apache-2.0"
 readme = "README.md"
