@@ -2,7 +2,7 @@
 name = "resolv-conf"
 version = "0.7.4"
 edition = "2021"
-rust-version = "1.63"
+rust-version = "1.61"
 description = """The resolv.conf file parser"""
 license = "MIT OR Apache-2.0"
 readme = "README.md"
@@ -12,8 +12,10 @@ homepage = "https://github.com/hickory-dns/resolv-conf"
 documentation = "https://docs.rs/resolv-conf/"
 repository = "https://github.com/hickory-dns/resolv-conf"
 
-[dependencies]
-libc = { version = "0.2", optional = true }
-
 [features]
-system = ["dep:libc"]
+# dummy feature for backwards compatibility with 0.7.1;
+# can be dropped with the next breaking version
+system = []
+
+[dependencies]
+cfg-if = "1.0.0"

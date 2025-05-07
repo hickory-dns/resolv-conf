@@ -1,7 +1,8 @@
-use std::fmt;
+use cfg_if::cfg_if;
 use std::iter::Iterator;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::slice::Iter;
+use std::{fmt, str};
 
 use crate::{grammar, Network, ParseError, ScopedIp};
 
@@ -26,7 +27,7 @@ enum LastSearch {
 /// way.
 ///
 /// Also consider using [`glibc_normalize`] and [`get_system_domain`] to match
-/// behavior of GNU libc. (latter requires ``system`` feature enabled)
+/// behavior of GNU libc.
 ///
 /// ```rust
 /// extern crate resolv_conf;
@@ -278,9 +279,7 @@ impl Config {
 
     /// Get domain from config or fallback to the suffix of a hostname
     ///
-    /// This is how glibc finds out a hostname. This method requires
-    /// ``system`` feature enabled.
-    #[cfg(feature = "system")]
+    /// This is how glibc finds out a hostname.
     pub fn get_system_domain(&self) -> Option<String> {
         if self.domain.is_some() {
             return self.domain.clone();
@@ -293,12 +292,34 @@ impl Config {
         // a heap allocation until the last possible moment.
         let mut hostname = [0u8; 1024];
 
-        let result = unsafe {
-            libc::gethostname(hostname.as_mut_ptr() as *mut libc::c_char, hostname.len())
-        };
+        cfg_if! {
+            if #[cfg(all(target_os = "linux", target_feature = "crt-static"))] {
+                use std::{fs::File, io::Read};
+                let read_bytes = match File::open("/proc/sys/kernel/hostname")
+                    .and_then(|mut f| f.read(&mut hostname))
+                {
+                    Ok(read_bytes) => read_bytes,
+                    Err(_) => return None,
+                };
 
-        if result < 0 {
-            return None;
+                if read_bytes < hostname.len() {
+                    hostname[read_bytes] = 0
+                } else {
+                    return None;
+                }
+            } else {
+                #[link(name = "c")]
+                /*unsafe*/
+                extern "C" {
+                    fn gethostname(hostname: *mut u8, size: usize) -> i32;
+                }
+
+                unsafe {
+                    if gethostname(hostname.as_mut_ptr(), hostname.len()) < 0 {
+                        return None;
+                    }
+                }
+            }
         }
 
         domain_from_host(&hostname).map(|s| s.to_owned())
@@ -448,7 +469,6 @@ pub enum Family {
 }
 
 /// Parses the domain name from a hostname, if available
-#[cfg(feature = "system")]
 fn domain_from_host(hostname: &[u8]) -> Option<&str> {
     let mut start = None;
     for (i, b) in hostname.iter().copied().enumerate() {
@@ -462,7 +482,7 @@ fn domain_from_host(hostname: &[u8]) -> Option<&str> {
         return match start? {
             // Avoid empty domains
             start if i - start < 2 => None,
-            start => std::str::from_utf8(&hostname[start + 1..i]).ok(),
+            start => str::from_utf8(&hostname[start + 1..i]).ok(),
         };
     }
 
@@ -471,10 +491,8 @@ fn domain_from_host(hostname: &[u8]) -> Option<&str> {
 
 #[cfg(test)]
 mod test {
-    #[cfg(feature = "system")]
     use super::domain_from_host;
     #[test]
-    #[cfg(feature = "system")]
     fn parses_domain_name() {
         assert!(domain_from_host(b"regular-hostname\0").is_none());
 
