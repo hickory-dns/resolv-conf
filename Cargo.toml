@@ -16,6 +16,3 @@ repository = "https://github.com/hickory-dns/resolv-conf"
 # dummy feature for backwards compatibility with 0.7.1;
 # can be dropped with the next breaking version
 system = []
-
-[dependencies]
-cfg-if = "1.0.0"

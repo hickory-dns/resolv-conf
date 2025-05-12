@@ -1,4 +1,3 @@
-use cfg_if::cfg_if;
 use std::iter::Iterator;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::slice::Iter;
@@ -292,32 +291,34 @@ impl Config {
         // a heap allocation until the last possible moment.
         let mut hostname = [0u8; 1024];
 
-        cfg_if! {
-            if #[cfg(all(target_os = "linux", target_feature = "crt-static"))] {
-                use std::{fs::File, io::Read};
-                let read_bytes = match File::open("/proc/sys/kernel/hostname")
-                    .and_then(|mut f| f.read(&mut hostname))
-                {
-                    Ok(read_bytes) => read_bytes,
-                    Err(_) => return None,
-                };
+        #[cfg(all(target_os = "linux", target_feature = "crt-static"))]
+        {
+            use std::{fs::File, io::Read};
+            let read_bytes = match File::open("/proc/sys/kernel/hostname")
+                .and_then(|mut f| f.read(&mut hostname))
+            {
+                Ok(read_bytes) => read_bytes,
+                Err(_) => return None,
+            };
 
-                if (1..hostname.len()).contains(&read_bytes) && hostname[read_bytes - 1] == b'\n' {
-                    hostname[read_bytes - 1] = 0
-                } else {
-                    return None;
-                }
+            if (1..=hostname.len()).contains(&read_bytes) && hostname[read_bytes - 1] == b'\n' {
+                hostname[read_bytes - 1] = 0
             } else {
-                #[link(name = "c")]
-                /*unsafe*/
-                extern "C" {
-                    fn gethostname(hostname: *mut u8, size: usize) -> i32;
-                }
+                return None;
+            }
+        }
 
-                unsafe {
-                    if gethostname(hostname.as_mut_ptr(), hostname.len()) < 0 {
-                        return None;
-                    }
+        #[cfg(not(all(target_os = "linux", target_feature = "crt-static")))]
+        {
+            #[link(name = "c")]
+            /*unsafe*/
+            extern "C" {
+                fn gethostname(hostname: *mut u8, size: usize) -> i32;
+            }
+
+            unsafe {
+                if gethostname(hostname.as_mut_ptr(), hostname.len()) < 0 {
+                    return None;
                 }
             }
         }
