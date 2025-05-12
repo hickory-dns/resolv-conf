@@ -294,17 +294,19 @@ impl Config {
         #[cfg(all(target_os = "linux", target_feature = "crt-static"))]
         {
             use std::{fs::File, io::Read};
-            let read_bytes = match File::open("/proc/sys/kernel/hostname")
-                .and_then(|mut f| f.read(&mut hostname))
-            {
-                Ok(read_bytes) => read_bytes,
-                Err(_) => return None,
-            };
+            let mut file = File::open("/proc/sys/kernel/hostname").ok()?;
+            let read_bytes = file.read(&mut hostname).ok()?;
 
-            if (1..=hostname.len()).contains(&read_bytes) && hostname[read_bytes - 1] == b'\n' {
+            // When reading /proc/sys/kernel/hostname file, the hostname should be
+            // terminated by a newline character, while libc gethostname() terminates
+            // the hostname with a null character. Hence, to match the behavior of
+            // gethostname() it is necessary to replace the newline with a null
+            // character. Note that since in POSIX there is no guarantee that hostname
+            // returned by procfs is always terminated by a newline character, we
+            // need to account for the possibility that the number of read bytes can be
+            // 0 and/or hostname is not terminated by a newline character.
+            if read_bytes > 0 && hostname[read_bytes - 1] == b'\n' {
                 hostname[read_bytes - 1] = 0
-            } else {
-                return None;
             }
         }
 
