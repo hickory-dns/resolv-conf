@@ -302,8 +302,8 @@ impl Config {
                     Err(_) => return None,
                 };
 
-                if read_bytes < hostname.len() {
-                    hostname[read_bytes] = 0
+                if (1..hostname.len()).contains(&read_bytes) && hostname[read_bytes - 1] == b'\n' {
+                    hostname[read_bytes - 1] = 0
                 } else {
                     return None;
                 }
