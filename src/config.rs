@@ -1,7 +1,7 @@
 use std::iter::Iterator;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::slice::Iter;
-use std::{fmt, mem, str};
+use std::{fmt, str};
 
 use crate::{grammar, Network, ParseError, ScopedIp};
 
@@ -26,7 +26,7 @@ enum LastSearch {
 /// way.
 ///
 /// Also consider using [`glibc_normalize`] and [`get_system_domain`] to match
-/// behavior of GNU libc. (latter requires ``system`` feature enabled)
+/// behavior of GNU libc.
 ///
 /// ```rust
 /// extern crate resolv_conf;
@@ -284,21 +284,46 @@ impl Config {
             return self.domain.clone();
         }
 
-        #[link(name = "c")]
-        /*unsafe*/
-        extern "C" {
-            fn gethostname(hostname: *mut u8, size: usize) -> i32;
-        }
-
         // This buffer is far larger than what most systems will ever allow, eg.
         // linux uses 64 via _SC_HOST_NAME_MAX even though POSIX says the size
         // must be _at least_ _POSIX_HOST_NAME_MAX (255), but other systems can
         // be larger, so we just use a sufficiently sized buffer so we can defer
         // a heap allocation until the last possible moment.
         let mut hostname = [0u8; 1024];
-        unsafe {
-            if gethostname(hostname.as_mut_ptr(), mem::size_of_val(&hostname)) < 0 {
+
+        #[cfg(all(target_os = "linux", target_feature = "crt-static"))]
+        {
+            use std::{fs::File, io::Read};
+            let mut file = File::open("/proc/sys/kernel/hostname").ok()?;
+            let read_bytes = file.read(&mut hostname).ok()?;
+
+            // According to Linux kernel's proc_dostring handler, user-space reads
+            // of /proc/sys entries which have a string value are terminated by
+            // a newline character. While libc gethostname() terminates the hostname
+            // with a null character. Hence, to match the behavior of gethostname()
+            // it is necessary to replace the newline with a null character.
+            if read_bytes == hostname.len() && hostname[read_bytes - 1] != b'\n' {
+                // In this case the string read from /proc/sys/kernel/hostname is
+                // truncated and cannot be terminated by a null character
                 return None;
+            }
+            // Since any non-truncated string read from /proc/sys/kernel/hostname
+            // ends with a newline character, read_bytes > 0.
+            hostname[read_bytes - 1] = 0;
+        }
+
+        #[cfg(not(all(target_os = "linux", target_feature = "crt-static")))]
+        {
+            #[link(name = "c")]
+            /*unsafe*/
+            extern "C" {
+                fn gethostname(hostname: *mut u8, size: usize) -> i32;
+            }
+
+            unsafe {
+                if gethostname(hostname.as_mut_ptr(), hostname.len()) < 0 {
+                    return None;
+                }
             }
         }
 
