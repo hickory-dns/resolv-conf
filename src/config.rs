@@ -297,17 +297,19 @@ impl Config {
             let mut file = File::open("/proc/sys/kernel/hostname").ok()?;
             let read_bytes = file.read(&mut hostname).ok()?;
 
-            // When reading /proc/sys/kernel/hostname file, the hostname should be
-            // terminated by a newline character, while libc gethostname() terminates
-            // the hostname with a null character. Hence, to match the behavior of
-            // gethostname() it is necessary to replace the newline with a null
-            // character. Note that since there is no guarantee that hostname
-            // returned by procfs is always terminated by a newline character, we
-            // need to account for the possibility that the number of read bytes can be
-            // 0 and/or hostname is not terminated by a newline character.
-            if read_bytes > 0 && hostname[read_bytes - 1] == b'\n' {
-                hostname[read_bytes - 1] = 0
+            // According to Linux kernel's proc_dostring handler, user-space reads
+            // of /proc/sys entries which have a string value are terminated by
+            // a newline character. While libc gethostname() terminates the hostname
+            // with a null character. Hence, to match the behavior of gethostname()
+            // it is necessary to replace the newline with a null character.
+            if read_bytes == hostname.len() && hostname[read_bytes - 1] != b'\n' {
+                // In this case the string read from /proc/sys/kernel/hostname is
+                // truncated and cannot be terminated by a null character
+                return None;
             }
+            // Since any non-truncated string read from /proc/sys/kernel/hostname
+            // ends with a newline character, read_bytes > 0.
+            hostname[read_bytes - 1] = 0;
         }
 
         #[cfg(not(all(target_os = "linux", target_feature = "crt-static")))]
