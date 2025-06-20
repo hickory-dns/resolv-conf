@@ -78,6 +78,8 @@ pub struct Config {
     pub no_check_names: bool,
     /// Try AAAA query before A
     pub inet6: bool,
+    /// Do not issue AAAA queries
+    pub no_aaaa: bool,
     /// Use reverse lookup of ipv6 using bit-label format described instead
     /// of nibble format
     pub ip6_bytestring: bool,
@@ -131,6 +133,7 @@ impl Config {
     /// assert_eq!(config.rotate, false);
     /// assert_eq!(config.no_check_names, false);
     /// assert_eq!(config.inet6, false);
+    /// assert_eq!(config.no_aaaa, false);
     /// assert_eq!(config.ip6_bytestring, false);
     /// assert_eq!(config.ip6_dotint, false);
     /// assert_eq!(config.edns0, false);
@@ -153,6 +156,7 @@ impl Config {
             rotate: false,
             no_check_names: false,
             inet6: false,
+            no_aaaa: false,
             ip6_bytestring: false,
             ip6_dotint: false,
             edns0: false,
@@ -387,6 +391,9 @@ impl fmt::Display for Config {
         }
         if self.inet6 {
             writeln!(fmt, "options inet6")?;
+        }
+        if self.no_aaaa {
+            writeln!(fmt, "options no-aaaa")?;
         }
         if self.ip6_bytestring {
             writeln!(fmt, "options ip6-bytestring")?;
