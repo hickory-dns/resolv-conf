@@ -8,5 +8,5 @@ fn main() {
     let mut f = File::open("/etc/resolv.conf").unwrap();
     f.read_to_end(&mut buf).unwrap();
     let cfg = resolv_conf::Config::parse(&buf).unwrap();
-    println!("---- Config -----\n{:#?}\n", cfg);
+    println!("---- Config -----\n{cfg:#?}\n");
 }
