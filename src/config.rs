@@ -6,16 +6,6 @@ use std::{fmt, str};
 
 use crate::{Network, ParseError, ScopedIp};
 
-const NAMESERVER_LIMIT: usize = 3;
-const SEARCH_LIMIT: usize = 6;
-
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-enum LastSearch {
-    None,
-    Domain,
-    Search,
-}
-
 /// Represent a resolver configuration, as described in `man 5 resolv.conf`.
 /// The options and defaults match those in the linux `man` page.
 ///
@@ -613,6 +603,16 @@ fn domain_from_host(hostname: &[u8]) -> Option<&str> {
 
     None
 }
+
+#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+enum LastSearch {
+    None,
+    Domain,
+    Search,
+}
+
+const NAMESERVER_LIMIT: usize = 3;
+const SEARCH_LIMIT: usize = 6;
 
 #[cfg(test)]
 mod test {
