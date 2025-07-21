@@ -107,12 +107,6 @@ pub struct Config {
     pub family: Vec<Family>,
 }
 
-impl Default for Config {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Config {
     /// Create a new `Config` object with default values.
     ///
@@ -448,6 +442,12 @@ impl Config {
         }
 
         domain_from_host(&hostname).map(|s| s.to_owned())
+    }
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
