@@ -1,9 +1,11 @@
 use std::iter::Iterator;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::slice::Iter;
+use std::str::from_utf8;
 use std::{fmt, str};
 
-use crate::{grammar, Network, ParseError, ScopedIp};
+use crate::grammar::{ip_v4_netw, ip_v6_netw};
+use crate::{Network, ParseError, ScopedIp};
 
 const NAMESERVER_LIMIT: usize = 3;
 const SEARCH_LIMIT: usize = 6;
@@ -187,7 +189,126 @@ impl Config {
     /// # }
     /// ```
     pub fn parse<T: AsRef<[u8]>>(buf: T) -> Result<Config, ParseError> {
-        grammar::parse(buf.as_ref())
+        Self::from_slice(buf.as_ref())
+    }
+
+    fn from_slice(bytes: &[u8]) -> Result<Self, ParseError> {
+        use ParseError::*;
+        let mut cfg = Config::new();
+        'lines: for (lineno, line) in bytes.split(|&x| x == b'\n').enumerate() {
+            for &c in line.iter() {
+                if c != b'\t' && c != b' ' {
+                    if c == b';' || c == b'#' {
+                        continue 'lines;
+                    } else {
+                        break;
+                    }
+                }
+            }
+            // All that dances above to allow invalid utf-8 inside the comments
+            let mut words = from_utf8(line)
+            .map_err(|e| InvalidUtf8(lineno, e))?
+            // ignore everything after ';' or '#'
+            .split([';', '#'])
+            .next()
+            .ok_or(InvalidValue(lineno))?
+            .split_whitespace();
+            let keyword = match words.next() {
+                Some(x) => x,
+                None => continue,
+            };
+            match keyword {
+                "nameserver" => {
+                    let srv = words
+                        .next()
+                        .ok_or(InvalidValue(lineno))
+                        .map(|addr| addr.parse().map_err(|e| InvalidIp(lineno, e)))??;
+                    cfg.nameservers.push(srv);
+                    if words.next().is_some() {
+                        return Err(ExtraData(lineno));
+                    }
+                }
+                "domain" => {
+                    let dom = words
+                        .next()
+                        .and_then(|x| x.parse().ok())
+                        .ok_or(InvalidValue(lineno))?;
+                    cfg.set_domain(dom);
+                    if words.next().is_some() {
+                        return Err(ExtraData(lineno));
+                    }
+                }
+                "search" => {
+                    cfg.set_search(words.map(|x| x.to_string()).collect());
+                }
+                "sortlist" => {
+                    cfg.sortlist.clear();
+                    for pair in words {
+                        let netw = ip_v4_netw(pair)
+                            .or_else(|_| ip_v6_netw(pair))
+                            .map_err(|e| InvalidIp(lineno, e))?;
+                        cfg.sortlist.push(netw);
+                    }
+                }
+                "options" => {
+                    for pair in words {
+                        let mut iter = pair.splitn(2, ':');
+                        let key = iter.next().unwrap();
+                        let value = iter.next();
+                        if iter.next().is_some() {
+                            return Err(ExtraData(lineno));
+                        }
+                        match (key, value) {
+                            // TODO(tailhook) ensure that values are None?
+                            ("debug", _) => cfg.debug = true,
+                            ("ndots", Some(x)) => {
+                                cfg.ndots = x.parse().map_err(|_| InvalidOptionValue(lineno))?
+                            }
+                            ("timeout", Some(x)) => {
+                                cfg.timeout = x.parse().map_err(|_| InvalidOptionValue(lineno))?
+                            }
+                            ("attempts", Some(x)) => {
+                                cfg.attempts = x.parse().map_err(|_| InvalidOptionValue(lineno))?
+                            }
+                            ("rotate", _) => cfg.rotate = true,
+                            ("no-check-names", _) => cfg.no_check_names = true,
+                            ("inet6", _) => cfg.inet6 = true,
+                            ("ip6-bytestring", _) => cfg.ip6_bytestring = true,
+                            ("ip6-dotint", _) => cfg.ip6_dotint = true,
+                            ("no-ip6-dotint", _) => cfg.ip6_dotint = false,
+                            ("edns0", _) => cfg.edns0 = true,
+                            ("single-request", _) => cfg.single_request = true,
+                            ("single-request-reopen", _) => cfg.single_request_reopen = true,
+                            ("no-reload", _) => cfg.no_reload = true,
+                            ("trust-ad", _) => cfg.trust_ad = true,
+                            ("no-tld-query", _) => cfg.no_tld_query = true,
+                            ("use-vc", _) => cfg.use_vc = true,
+                            _ => return Err(InvalidOption(lineno)),
+                        }
+                    }
+                }
+                "lookup" => {
+                    for word in words {
+                        match word {
+                            "file" => cfg.lookup.push(Lookup::File),
+                            "bind" => cfg.lookup.push(Lookup::Bind),
+                            extra => cfg.lookup.push(Lookup::Extra(extra.to_string())),
+                        }
+                    }
+                }
+                "family" => {
+                    for word in words {
+                        match word {
+                            "inet4" => cfg.family.push(Family::Inet4),
+                            "inet6" => cfg.family.push(Family::Inet6),
+                            _ => return Err(InvalidValue(lineno)),
+                        }
+                    }
+                }
+                _ => return Err(InvalidDirective(lineno)),
+            }
+        }
+        Ok(cfg)
     }
 
     /// Return the suffixes declared in the last "domain" or "search" directive.
