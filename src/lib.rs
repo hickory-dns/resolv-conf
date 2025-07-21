@@ -95,7 +95,6 @@ use std::str::Utf8Error;
 
 mod config;
 pub use config::{Config, DomainIter, Family, Lookup};
-mod grammar;
 mod ip;
 pub use ip::{AddrParseError, Network, ScopedIp};
 

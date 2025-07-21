@@ -4,7 +4,6 @@ use std::slice::Iter;
 use std::str::from_utf8;
 use std::{fmt, str};
 
-use crate::grammar::{ip_v4_netw, ip_v6_netw};
 use crate::{Network, ParseError, ScopedIp};
 
 const NAMESERVER_LIMIT: usize = 3;
@@ -244,8 +243,8 @@ impl Config {
                 "sortlist" => {
                     cfg.sortlist.clear();
                     for pair in words {
-                        let netw = ip_v4_netw(pair)
-                            .or_else(|_| ip_v6_netw(pair))
+                        let netw = Network::v4_from_str(pair)
+                            .or_else(|_| Network::v6_from_str(pair))
                             .map_err(|e| InvalidIp(lineno, e))?;
                         cfg.sortlist.push(netw);
                     }
