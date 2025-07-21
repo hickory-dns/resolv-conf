@@ -125,31 +125,7 @@ impl Config {
     /// assert_eq!(config.use_vc, false);
     /// # }
     pub fn new() -> Config {
-        Config {
-            nameservers: Vec::new(),
-            domain: None,
-            search: None,
-            last_search: LastSearch::None,
-            sortlist: Vec::new(),
-            debug: false,
-            ndots: 1,
-            timeout: 5,
-            attempts: 2,
-            rotate: false,
-            no_check_names: false,
-            inet6: false,
-            ip6_bytestring: false,
-            ip6_dotint: false,
-            edns0: false,
-            single_request: false,
-            single_request_reopen: false,
-            no_tld_query: false,
-            use_vc: false,
-            no_reload: false,
-            trust_ad: false,
-            lookup: Vec::new(),
-            family: Vec::new(),
-        }
+        Self::default()
     }
 
     /// Parse a buffer and return the corresponding `Config` object.
@@ -437,7 +413,31 @@ impl Config {
 
 impl Default for Config {
     fn default() -> Self {
-        Self::new()
+        Self {
+            nameservers: Vec::new(),
+            domain: None,
+            search: None,
+            last_search: LastSearch::None,
+            sortlist: Vec::new(),
+            debug: false,
+            ndots: 1,
+            timeout: 5,
+            attempts: 2,
+            rotate: false,
+            no_check_names: false,
+            inet6: false,
+            ip6_bytestring: false,
+            ip6_dotint: false,
+            edns0: false,
+            single_request: false,
+            single_request_reopen: false,
+            no_tld_query: false,
+            use_vc: false,
+            no_reload: false,
+            trust_ad: false,
+            lookup: Vec::new(),
+            family: Vec::new(),
+        }
     }
 }
 
