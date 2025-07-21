@@ -535,17 +535,43 @@ impl Default for Config {
 
 impl fmt::Display for Config {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        for nameserver in self.nameservers.iter() {
+        let Self {
+            nameservers,
+            last_search,
+            domain,
+            search,
+            sortlist,
+            debug,
+            ndots,
+            timeout,
+            attempts,
+            rotate,
+            no_check_names,
+            inet6,
+            ip6_bytestring,
+            ip6_dotint,
+            edns0,
+            single_request,
+            single_request_reopen,
+            no_tld_query,
+            use_vc,
+            no_reload,
+            trust_ad,
+            lookup,
+            family,
+        } = self;
+
+        for nameserver in nameservers.iter() {
             writeln!(fmt, "nameserver {nameserver}")?;
         }
 
-        if self.last_search != LastSearch::Domain {
-            if let Some(domain) = &self.domain {
+        if last_search != &LastSearch::Domain {
+            if let Some(domain) = domain {
                 writeln!(fmt, "domain {domain}")?;
             }
         }
 
-        if let Some(search) = &self.search {
+        if let Some(search) = search {
             if !search.is_empty() {
                 write!(fmt, "search")?;
                 for suffix in search.iter() {
@@ -555,66 +581,89 @@ impl fmt::Display for Config {
             }
         }
 
-        if self.last_search == LastSearch::Domain {
+        if last_search == &LastSearch::Domain {
             if let Some(domain) = &self.domain {
                 writeln!(fmt, "domain {domain}")?;
             }
         }
 
-        if !self.sortlist.is_empty() {
+        if !sortlist.is_empty() {
             write!(fmt, "sortlist")?;
-            for network in self.sortlist.iter() {
+            for network in sortlist.iter() {
                 write!(fmt, " {network}")?;
             }
             writeln!(fmt)?;
         }
 
-        if self.debug {
+        if !lookup.is_empty() {
+            write!(fmt, "lookup")?;
+            for db in lookup.iter() {
+                match db {
+                    Lookup::File => write!(fmt, " file")?,
+                    Lookup::Bind => write!(fmt, " bind")?,
+                    Lookup::Extra(extra) => write!(fmt, " {extra}")?,
+                }
+            }
+            writeln!(fmt)?;
+        }
+
+        if !family.is_empty() {
+            write!(fmt, "family")?;
+            for fam in family.iter() {
+                match fam {
+                    Family::Inet4 => write!(fmt, " inet4")?,
+                    Family::Inet6 => write!(fmt, " inet6")?,
+                }
+            }
+            writeln!(fmt)?;
+        }
+
+        if *debug {
             writeln!(fmt, "options debug")?;
         }
-        if self.ndots != 1 {
+        if *ndots != 1 {
             writeln!(fmt, "options ndots:{}", self.ndots)?;
         }
-        if self.timeout != 5 {
+        if *timeout != 5 {
             writeln!(fmt, "options timeout:{}", self.timeout)?;
         }
-        if self.attempts != 2 {
+        if *attempts != 2 {
             writeln!(fmt, "options attempts:{}", self.attempts)?;
         }
-        if self.rotate {
+        if *rotate {
             writeln!(fmt, "options rotate")?;
         }
-        if self.no_check_names {
+        if *no_check_names {
             writeln!(fmt, "options no-check-names")?;
         }
-        if self.inet6 {
+        if *inet6 {
             writeln!(fmt, "options inet6")?;
         }
-        if self.ip6_bytestring {
+        if *ip6_bytestring {
             writeln!(fmt, "options ip6-bytestring")?;
         }
-        if self.ip6_dotint {
+        if *ip6_dotint {
             writeln!(fmt, "options ip6-dotint")?;
         }
-        if self.edns0 {
+        if *edns0 {
             writeln!(fmt, "options edns0")?;
         }
-        if self.single_request {
+        if *single_request {
             writeln!(fmt, "options single-request")?;
         }
-        if self.single_request_reopen {
+        if *single_request_reopen {
             writeln!(fmt, "options single-request-reopen")?;
         }
-        if self.no_tld_query {
+        if *no_tld_query {
             writeln!(fmt, "options no-tld-query")?;
         }
-        if self.use_vc {
+        if *use_vc {
             writeln!(fmt, "options use-vc")?;
         }
-        if self.no_reload {
+        if *no_reload {
             writeln!(fmt, "options no-reload")?;
         }
-        if self.trust_ad {
+        if *trust_ad {
             writeln!(fmt, "options trust-ad")?;
         }
 
