@@ -189,6 +189,8 @@ pub struct Config {
     /// The order in which internet protocol families should be prefered
     /// **(openbsd-only)**
     pub family: Vec<Family>,
+    /// Suppress AAAA queries made by the stub resolver
+    pub no_aaaa: bool,
 }
 
 impl Config {
@@ -334,6 +336,7 @@ impl Config {
                             ("trust-ad", _) => cfg.trust_ad = true,
                             ("no-tld-query", _) => cfg.no_tld_query = true,
                             ("use-vc", _) => cfg.use_vc = true,
+                            ("no-aaaa", _) => cfg.no_aaaa = true,
                             _ => return Err(InvalidOption(lineno)),
                         }
                     }
@@ -529,6 +532,7 @@ impl Default for Config {
             trust_ad: false,
             lookup: Vec::new(),
             family: Vec::new(),
+            no_aaaa: false,
         }
     }
 }
@@ -559,6 +563,7 @@ impl fmt::Display for Config {
             trust_ad,
             lookup,
             family,
+            no_aaaa,
         } = self;
 
         for nameserver in nameservers.iter() {
@@ -665,6 +670,9 @@ impl fmt::Display for Config {
         }
         if *trust_ad {
             writeln!(fmt, "options trust-ad")?;
+        }
+        if *no_aaaa {
+            writeln!(fmt, "options no-aaaa")?;
         }
 
         Ok(())
