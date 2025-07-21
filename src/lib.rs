@@ -88,8 +88,7 @@
 //! }
 //! ```
 
-#![warn(missing_debug_implementations)]
-#![warn(missing_docs)]
+#![warn(missing_debug_implementations, missing_docs, unreachable_pub)]
 
 use std::str::Utf8Error;
 
