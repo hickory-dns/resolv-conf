@@ -1,7 +1,7 @@
 use std::iter::Iterator;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
 use std::slice::Iter;
-use std::str::from_utf8;
+use std::str::{from_utf8, FromStr};
 use std::{fmt, str};
 
 use crate::{Network, ParseError, ScopedIp};
@@ -203,10 +203,8 @@ impl Config {
                 "sortlist" => {
                     cfg.sortlist.clear();
                     for pair in words {
-                        let netw = Network::v4_from_str(pair)
-                            .or_else(|_| Network::v6_from_str(pair))
-                            .map_err(|e| InvalidIp(lineno, e))?;
-                        cfg.sortlist.push(netw);
+                        cfg.sortlist
+                            .push(Network::from_str(pair).map_err(|e| InvalidIp(lineno, e))?);
                     }
                 }
                 "options" => {

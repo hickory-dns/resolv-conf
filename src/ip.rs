@@ -12,67 +12,74 @@ pub enum Network {
     V6(Ipv6Addr, Ipv6Addr),
 }
 
-impl Network {
-    pub(crate) fn v4_from_str(val: &str) -> Result<Self, AddrParseError> {
-        let mut pair = val.splitn(2, '/');
-        let ip: Ipv4Addr = pair.next().unwrap().parse()?;
-        if ip.is_unspecified() {
-            return Err(AddrParseError);
-        }
+impl FromStr for Network {
+    type Err = AddrParseError;
 
-        if let Some(mask) = pair.next() {
-            let mask = mask.parse()?;
-            // make sure this is a valid mask
-            let value: u32 = ip.octets().iter().fold(0, |acc, &x| acc + u32::from(x));
-            if value == 0 || (value & !value != 0) {
-                Err(AddrParseError)
-            } else {
+    fn from_str(val: &str) -> Result<Self, Self::Err> {
+        let (ip, mask) = match val.split_once('/') {
+            Some((ip, mask)) => (ip, Some(mask)),
+            None => (val, None),
+        };
+
+        match IpAddr::from_str(ip)? {
+            IpAddr::V4(ip) => {
+                if ip.is_unspecified() {
+                    return Err(AddrParseError);
+                }
+
+                let mask = match mask {
+                    Some(mask) => {
+                        let mask = Ipv4Addr::from_str(mask)?;
+                        // make sure this is a valid mask
+                        let value = ip.octets().iter().fold(0, |acc, &x| acc + u32::from(x));
+                        match value == 0 || (value & !value != 0) {
+                            true => return Err(AddrParseError),
+                            false => mask,
+                        }
+                    }
+                    // We have to "guess" the mask.
+                    //
+                    // FIXME(@little-dude) right now, we look at the number or bytes that are 0,
+                    // but maybe we should use the number of bits that are 0.
+                    //
+                    // In other words, with this implementation, the mask of `128.192.0.0` will be
+                    // `255.255.0.0` (a.k.a `/16`). But we could also consider that the mask is
+                    // `/10` (a.k.a `255.63.0.0`).
+                    //
+                    // My only source on topic is the "DNS and Bind" book which suggests using
+                    // bytes, not bits.
+                    None => {
+                        let octets = ip.octets();
+                        if octets[3] == 0 {
+                            if octets[2] == 0 {
+                                if octets[1] == 0 {
+                                    Ipv4Addr::new(255, 0, 0, 0)
+                                } else {
+                                    Ipv4Addr::new(255, 255, 0, 0)
+                                }
+                            } else {
+                                Ipv4Addr::new(255, 255, 255, 0)
+                            }
+                        } else {
+                            Ipv4Addr::new(255, 255, 255, 255)
+                        }
+                    }
+                };
+
                 Ok(Self::V4(ip, mask))
             }
-        } else {
-            // We have to "guess" the mask.
-            //
-            // FIXME(@little-dude) right now, we look at the number or bytes that are 0, but maybe we
-            // should use the number of bits that are 0.
-            //
-            // In other words, with this implementation, the mask of `128.192.0.0` will be
-            // `255.255.0.0` (a.k.a `/16`). But we could also consider that the mask is `/10` (a.k.a
-            // `255.63.0.0`).
-            //
-            // My only source on topic is the "DNS and Bind" book which suggests using bytes, not bits.
-            let octets = ip.octets();
-            let mask = if octets[3] == 0 {
-                if octets[2] == 0 {
-                    if octets[1] == 0 {
-                        Ipv4Addr::new(255, 0, 0, 0)
-                    } else {
-                        Ipv4Addr::new(255, 255, 0, 0)
-                    }
-                } else {
-                    Ipv4Addr::new(255, 255, 255, 0)
-                }
-            } else {
-                Ipv4Addr::new(255, 255, 255, 255)
-            };
+            IpAddr::V6(ip) => {
+                let mask = match mask {
+                    // FIXME: validate the mask
+                    Some(mask) => Ipv6Addr::from_str(mask)?,
+                    // FIXME: "guess" an appropriate mask for the IP
+                    None => Ipv6Addr::new(
+                        65_535, 65_535, 65_535, 65_535, 65_535, 65_535, 65_535, 65_535,
+                    ),
+                };
 
-            Ok(Self::V4(ip, mask))
-        }
-    }
-
-    pub(crate) fn v6_from_str(val: &str) -> Result<Self, AddrParseError> {
-        let mut pair = val.splitn(2, '/');
-        let ip = pair.next().unwrap().parse()?;
-        if let Some(msk) = pair.next() {
-            // FIXME: validate the mask
-            Ok(Self::V6(ip, msk.parse()?))
-        } else {
-            // FIXME: "guess" an appropriate mask for the IP
-            Ok(Self::V6(
-                ip,
-                Ipv6Addr::new(
-                    65_535, 65_535, 65_535, 65_535, 65_535, 65_535, 65_535, 65_535,
-                ),
-            ))
+                Ok(Self::V6(ip, mask))
+            }
         }
     }
 }
