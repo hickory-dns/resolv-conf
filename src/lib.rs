@@ -91,10 +91,66 @@
 #![warn(missing_debug_implementations)]
 #![warn(missing_docs)]
 
+use std::str::Utf8Error;
+
 mod config;
+pub use config::{Config, DomainIter, Family, Lookup};
 mod grammar;
 mod ip;
-
-pub use config::{Config, DomainIter, Family, Lookup};
-pub use grammar::ParseError;
 pub use ip::{AddrParseError, Network, ScopedIp};
+
+/// Error while parsing resolv.conf file
+#[derive(Debug)]
+pub enum ParseError {
+    /// Error that may be returned when the string to parse contains invalid UTF-8 sequences
+    InvalidUtf8(usize, Utf8Error),
+    /// Error returned a value for a given directive is invalid.
+    /// This can also happen when the value is missing, if the directive requires a value.
+    InvalidValue(usize),
+    /// Error returned when a value for a given option is invalid.
+    /// This can also happen when the value is missing, if the option requires a value.
+    InvalidOptionValue(usize),
+    /// Error returned when a invalid option is found.
+    InvalidOption(usize),
+    /// Error returned when a invalid directive is found.
+    InvalidDirective(usize),
+    /// Error returned when a value cannot be parsed an an IP address.
+    InvalidIp(usize, AddrParseError),
+    /// Error returned when there is extra data at the end of a line.
+    ExtraData(usize),
+}
+
+impl std::fmt::Display for ParseError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        match self {
+            ParseError::InvalidUtf8(line, err) => write!(f, "bad unicode at line {line}: {err}"),
+            ParseError::InvalidValue(line) => write!(
+                f,
+                "directive at line {line} is improperly formatted or contains invalid value",
+            ),
+            ParseError::InvalidOptionValue(line) => write!(
+                f,
+                "directive options at line {line} contains invalid value of some option",
+            ),
+            ParseError::InvalidOption(line) => {
+                write!(f, "option at line {line} is not recognized")
+            }
+            ParseError::InvalidDirective(line) => {
+                write!(f, "directive at line {line} is not recognized")
+            }
+            ParseError::InvalidIp(line, err) => {
+                write!(f, "directive at line {line} contains invalid IP: {err}")
+            }
+            ParseError::ExtraData(line) => write!(f, "extra data at the end of line {line}"),
+        }
+    }
+}
+
+impl std::error::Error for ParseError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            ParseError::InvalidUtf8(_, err) => Some(err),
+            _ => None,
+        }
+    }
+}
