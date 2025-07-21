@@ -27,7 +27,7 @@ impl Network {
             if value == 0 || (value & !value != 0) {
                 Err(AddrParseError)
             } else {
-                Ok(Network::V4(ip, mask))
+                Ok(Self::V4(ip, mask))
             }
         } else {
             // We have to "guess" the mask.
@@ -80,8 +80,8 @@ impl Network {
 impl fmt::Display for Network {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            Network::V4(address, mask) => write!(fmt, "{address}/{mask}"),
-            Network::V6(address, mask) => write!(fmt, "{address}/{mask}"),
+            Self::V4(address, mask) => write!(fmt, "{address}/{mask}"),
+            Self::V6(address, mask) => write!(fmt, "{address}/{mask}"),
         }
     }
 }
@@ -99,8 +99,8 @@ pub enum ScopedIp {
 impl From<ScopedIp> for IpAddr {
     fn from(val: ScopedIp) -> Self {
         match val {
-            ScopedIp::V4(ip) => IpAddr::from(ip),
-            ScopedIp::V6(ip, _) => IpAddr::from(ip),
+            ScopedIp::V4(ip) => Self::from(ip),
+            ScopedIp::V6(ip, _) => Self::from(ip),
         }
     }
 }
@@ -108,29 +108,29 @@ impl From<ScopedIp> for IpAddr {
 impl From<&ScopedIp> for IpAddr {
     fn from(val: &ScopedIp) -> Self {
         match val {
-            ScopedIp::V4(ip) => IpAddr::from(*ip),
-            ScopedIp::V6(ip, _) => IpAddr::from(*ip),
+            ScopedIp::V4(ip) => Self::from(*ip),
+            ScopedIp::V6(ip, _) => Self::from(*ip),
         }
     }
 }
 
 impl From<Ipv6Addr> for ScopedIp {
     fn from(value: Ipv6Addr) -> Self {
-        ScopedIp::V6(value, None)
+        Self::V6(value, None)
     }
 }
 
 impl From<Ipv4Addr> for ScopedIp {
     fn from(value: Ipv4Addr) -> Self {
-        ScopedIp::V4(value)
+        Self::V4(value)
     }
 }
 
 impl From<IpAddr> for ScopedIp {
     fn from(value: IpAddr) -> Self {
         match value {
-            IpAddr::V4(ip) => ScopedIp::from(ip),
-            IpAddr::V6(ip) => ScopedIp::from(ip),
+            IpAddr::V4(ip) => Self::from(ip),
+            IpAddr::V6(ip) => Self::from(ip),
         }
     }
 }
@@ -138,7 +138,7 @@ impl From<IpAddr> for ScopedIp {
 impl FromStr for ScopedIp {
     type Err = AddrParseError;
     /// Parse a string representing an IP address.
-    fn from_str(s: &str) -> Result<ScopedIp, AddrParseError> {
+    fn from_str(s: &str) -> Result<Self, AddrParseError> {
         let mut parts = s.split('%');
         let addr = parts.next().unwrap();
         match IpAddr::from_str(addr) {
@@ -147,7 +147,7 @@ impl FromStr for ScopedIp {
                     // It's not a valid IPv4 address if it contains a '%'
                     Err(AddrParseError)
                 } else {
-                    Ok(ScopedIp::from(ip))
+                    Ok(Self::from(ip))
                 }
             }
             Ok(IpAddr::V6(ip)) => {
@@ -160,9 +160,9 @@ impl FromStr for ScopedIp {
                             return Err(AddrParseError);
                         }
                     }
-                    Ok(ScopedIp::V6(ip, Some(scope_id.to_string())))
+                    Ok(Self::V6(ip, Some(scope_id.to_string())))
                 } else {
-                    Ok(ScopedIp::V6(ip, None))
+                    Ok(Self::V6(ip, None))
                 }
             }
             Err(e) => Err(e.into()),
@@ -173,9 +173,9 @@ impl FromStr for ScopedIp {
 impl fmt::Display for ScopedIp {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            ScopedIp::V4(address) => address.fmt(fmt),
-            ScopedIp::V6(address, None) => address.fmt(fmt),
-            ScopedIp::V6(address, Some(scope)) => write!(fmt, "{address}%{scope}"),
+            Self::V4(address) => address.fmt(fmt),
+            Self::V6(address, None) => address.fmt(fmt),
+            Self::V6(address, Some(scope)) => write!(fmt, "{address}%{scope}"),
         }
     }
 }
@@ -194,6 +194,6 @@ impl Error for AddrParseError {}
 
 impl From<::std::net::AddrParseError> for AddrParseError {
     fn from(_: ::std::net::AddrParseError) -> Self {
-        AddrParseError
+        Self
     }
 }
