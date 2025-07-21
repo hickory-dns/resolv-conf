@@ -124,7 +124,7 @@ impl Config {
     /// assert_eq!(config.no_tld_query, false);
     /// assert_eq!(config.use_vc, false);
     /// # }
-    pub fn new() -> Config {
+    pub fn new() -> Self {
         Self::default()
     }
 
@@ -147,13 +147,13 @@ impl Config {
     /// println!("{:?}", parsed_config);
     /// # }
     /// ```
-    pub fn parse<T: AsRef<[u8]>>(buf: T) -> Result<Config, ParseError> {
+    pub fn parse<T: AsRef<[u8]>>(buf: T) -> Result<Self, ParseError> {
         Self::from_slice(buf.as_ref())
     }
 
     fn from_slice(bytes: &[u8]) -> Result<Self, ParseError> {
         use ParseError::*;
-        let mut cfg = Config::new();
+        let mut cfg = Self::new();
         'lines: for (lineno, line) in bytes.split(|&x| x == b'\n').enumerate() {
             for &c in line.iter() {
                 if c != b'\t' && c != b' ' {

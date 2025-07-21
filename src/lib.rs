@@ -89,6 +89,7 @@
 //! ```
 
 #![warn(missing_debug_implementations, missing_docs, unreachable_pub)]
+#![warn(clippy::use_self)]
 
 use std::str::Utf8Error;
 
@@ -121,25 +122,25 @@ pub enum ParseError {
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            ParseError::InvalidUtf8(line, err) => write!(f, "bad unicode at line {line}: {err}"),
-            ParseError::InvalidValue(line) => write!(
+            Self::InvalidUtf8(line, err) => write!(f, "bad unicode at line {line}: {err}"),
+            Self::InvalidValue(line) => write!(
                 f,
                 "directive at line {line} is improperly formatted or contains invalid value",
             ),
-            ParseError::InvalidOptionValue(line) => write!(
+            Self::InvalidOptionValue(line) => write!(
                 f,
                 "directive options at line {line} contains invalid value of some option",
             ),
-            ParseError::InvalidOption(line) => {
+            Self::InvalidOption(line) => {
                 write!(f, "option at line {line} is not recognized")
             }
-            ParseError::InvalidDirective(line) => {
+            Self::InvalidDirective(line) => {
                 write!(f, "directive at line {line} is not recognized")
             }
-            ParseError::InvalidIp(line, err) => {
+            Self::InvalidIp(line, err) => {
                 write!(f, "directive at line {line} contains invalid IP: {err}")
             }
-            ParseError::ExtraData(line) => write!(f, "extra data at the end of line {line}"),
+            Self::ExtraData(line) => write!(f, "extra data at the end of line {line}"),
         }
     }
 }
@@ -147,7 +148,7 @@ impl std::fmt::Display for ParseError {
 impl std::error::Error for ParseError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
-            ParseError::InvalidUtf8(_, err) => Some(err),
+            Self::InvalidUtf8(_, err) => Some(err),
             _ => None,
         }
     }
