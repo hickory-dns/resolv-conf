@@ -244,12 +244,18 @@ impl Config {
     /// # }
     /// ```
     pub fn parse<T: AsRef<[u8]>>(buf: T) -> Result<Self, ParseError> {
-        Self::from_slice(buf.as_ref())
+        let (new, mut errors) = Self::from_slice(buf.as_ref());
+        let mut iter = errors.drain(..);
+        match iter.next() {
+            Some(err) => Err(err),
+            None => Ok(new),
+        }
     }
 
-    fn from_slice(bytes: &[u8]) -> Result<Self, ParseError> {
+    fn from_slice(bytes: &[u8]) -> (Self, Vec<ParseError>) {
         use ParseError::*;
         let mut cfg = Self::new();
+        let mut errors = Vec::new();
         'lines: for (lineno, line) in bytes.split(|&x| x == b'\n').enumerate() {
             for &c in line.iter() {
                 if c != b'\t' && c != b' ' {
@@ -260,37 +266,62 @@ impl Config {
                     }
                 }
             }
+
             // All that dances above to allow invalid utf-8 inside the comments
-            let mut words = from_utf8(line)
-            .map_err(|e| InvalidUtf8(lineno, e))?
+            let str = match from_utf8(line) {
+                Ok(str) => str,
+                Err(e) => {
+                    errors.push(InvalidUtf8(lineno, e));
+                    continue;
+                }
+            };
+
             // ignore everything after ';' or '#'
-            .split([';', '#'])
-            .next()
-            .ok_or(InvalidValue(lineno))?
-            .split_whitespace();
+            let text = match str.split([';', '#']).next() {
+                Some(text) => text,
+                None => {
+                    errors.push(InvalidValue(lineno));
+                    continue;
+                }
+            };
+
+            let mut words = text.split_whitespace();
             let keyword = match words.next() {
                 Some(x) => x,
                 None => continue,
             };
+
             match keyword {
                 "nameserver" => {
-                    let srv = words
-                        .next()
-                        .ok_or(InvalidValue(lineno))
-                        .map(|addr| addr.parse().map_err(|e| InvalidIp(lineno, e)))??;
-                    cfg.nameservers.push(srv);
+                    let srv = match words.next() {
+                        Some(srv) => srv,
+                        None => {
+                            errors.push(InvalidValue(lineno));
+                            continue;
+                        }
+                    };
+
+                    match ScopedIp::from_str(srv) {
+                        Ok(addr) => cfg.nameservers.push(addr),
+                        Err(e) => errors.push(InvalidIp(lineno, e)),
+                    }
+
                     if words.next().is_some() {
-                        return Err(ExtraData(lineno));
+                        errors.push(ExtraData(lineno));
                     }
                 }
                 "domain" => {
-                    let dom = words
-                        .next()
-                        .and_then(|x| x.parse().ok())
-                        .ok_or(InvalidValue(lineno))?;
-                    cfg.set_domain(dom);
+                    let domain = match words.next() {
+                        Some(domain) => domain,
+                        None => {
+                            errors.push(InvalidValue(lineno));
+                            continue;
+                        }
+                    };
+
+                    cfg.set_domain(domain.to_owned());
                     if words.next().is_some() {
-                        return Err(ExtraData(lineno));
+                        errors.push(ExtraData(lineno));
                     }
                 }
                 "search" => {
@@ -299,30 +330,44 @@ impl Config {
                 "sortlist" => {
                     cfg.sortlist.clear();
                     for pair in words {
-                        cfg.sortlist
-                            .push(Network::from_str(pair).map_err(|e| InvalidIp(lineno, e))?);
+                        match Network::from_str(pair) {
+                            Ok(network) => cfg.sortlist.push(network),
+                            Err(e) => errors.push(InvalidIp(lineno, e)),
+                        }
                     }
                 }
                 "options" => {
                     for pair in words {
                         let mut iter = pair.splitn(2, ':');
-                        let key = iter.next().unwrap();
+                        let key = match iter.next() {
+                            Some(key) => key,
+                            None => {
+                                errors.push(InvalidValue(lineno));
+                                continue 'lines;
+                            }
+                        };
+
                         let value = iter.next();
                         if iter.next().is_some() {
-                            return Err(ExtraData(lineno));
+                            errors.push(ExtraData(lineno));
+                            continue 'lines;
                         }
+
                         match (key, value) {
                             // TODO(tailhook) ensure that values are None?
                             ("debug", _) => cfg.debug = true,
-                            ("ndots", Some(x)) => {
-                                cfg.ndots = x.parse().map_err(|_| InvalidOptionValue(lineno))?
-                            }
-                            ("timeout", Some(x)) => {
-                                cfg.timeout = x.parse().map_err(|_| InvalidOptionValue(lineno))?
-                            }
-                            ("attempts", Some(x)) => {
-                                cfg.attempts = x.parse().map_err(|_| InvalidOptionValue(lineno))?
-                            }
+                            ("ndots", Some(x)) => match u32::from_str(x) {
+                                Ok(ndots) => cfg.ndots = ndots,
+                                Err(_) => errors.push(InvalidOptionValue(lineno)),
+                            },
+                            ("timeout", Some(x)) => match u32::from_str(x) {
+                                Ok(timeout) => cfg.timeout = timeout,
+                                Err(_) => errors.push(InvalidOptionValue(lineno)),
+                            },
+                            ("attempts", Some(x)) => match u32::from_str(x) {
+                                Ok(attempts) => cfg.attempts = attempts,
+                                Err(_) => errors.push(InvalidOptionValue(lineno)),
+                            },
                             ("rotate", _) => cfg.rotate = true,
                             ("no-check-names", _) => cfg.no_check_names = true,
                             ("inet6", _) => cfg.inet6 = true,
@@ -337,7 +382,7 @@ impl Config {
                             ("no-tld-query", _) => cfg.no_tld_query = true,
                             ("use-vc", _) => cfg.use_vc = true,
                             ("no-aaaa", _) => cfg.no_aaaa = true,
-                            _ => return Err(InvalidOption(lineno)),
+                            _ => errors.push(InvalidOption(lineno)),
                         }
                     }
                 }
@@ -355,14 +400,15 @@ impl Config {
                         match word {
                             "inet4" => cfg.family.push(Family::Inet4),
                             "inet6" => cfg.family.push(Family::Inet6),
-                            _ => return Err(InvalidValue(lineno)),
+                            _ => errors.push(InvalidValue(lineno)),
                         }
                     }
                 }
-                _ => return Err(InvalidDirective(lineno)),
+                _ => errors.push(InvalidDirective(lineno)),
             }
         }
-        Ok(cfg)
+
+        (cfg, errors)
     }
 
     /// Return the suffixes declared in the last "domain" or "search" directive.
