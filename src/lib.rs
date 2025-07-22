@@ -244,7 +244,7 @@ impl Config {
     /// # }
     /// ```
     pub fn parse<T: AsRef<[u8]>>(buf: T) -> Result<Self, ParseError> {
-        let (new, mut errors) = Self::from_slice(buf.as_ref());
+        let (new, mut errors) = Self::parse_with_errors(buf.as_ref());
         let mut iter = errors.drain(..);
         match iter.next() {
             Some(err) => Err(err),
@@ -252,7 +252,7 @@ impl Config {
         }
     }
 
-    fn from_slice(bytes: &[u8]) -> (Self, Vec<ParseError>) {
+    fn parse_with_errors(bytes: &[u8]) -> (Self, Vec<ParseError>) {
         use ParseError::*;
         let mut cfg = Self::new();
         let mut errors = Vec::new();
