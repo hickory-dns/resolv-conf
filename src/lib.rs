@@ -252,7 +252,8 @@ impl Config {
         }
     }
 
-    fn parse_with_errors(bytes: &[u8]) -> (Self, Vec<ParseError>) {
+    /// Parse a buffer and return a best-effort parsed `Config` object along with any errors.
+    pub fn parse_with_errors(bytes: &[u8]) -> (Self, Vec<ParseError>) {
         use ParseError::*;
         let mut cfg = Self::new();
         let mut errors = Vec::new();
