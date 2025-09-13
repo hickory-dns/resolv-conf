@@ -489,7 +489,6 @@ impl Config {
 
         #[cfg(not(all(target_os = "linux", target_feature = "crt-static")))]
         {
-            #[link(name = "c")]
             /*unsafe*/
             extern "C" {
                 fn gethostname(hostname: *mut u8, size: usize) -> i32;
