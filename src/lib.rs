@@ -326,7 +326,15 @@ impl Config {
                     }
                 }
                 "search" => {
-                    cfg.set_search(words.map(|x| x.to_string()).collect());
+                    let mut search = Vec::new();
+                    for word in words {
+                        if !word.contains(',') {
+                            // Easy to get confused between spaces and commas here
+                            // https://github.com/hickory-dns/resolv-conf/issues/58
+                            search.push(word.to_owned());
+                        }
+                    }
+                    cfg.set_search(search);
                 }
                 "sortlist" => {
                     cfg.sortlist.clear();
@@ -868,6 +876,8 @@ const SEARCH_LIMIT: usize = 6;
 #[cfg(test)]
 mod test {
     use super::domain_from_host;
+    use super::Config;
+
     #[test]
     fn parses_domain_name() {
         assert!(domain_from_host(b"regular-hostname\0").is_none());
@@ -882,4 +892,15 @@ mod test {
         assert_eq!(domain_from_host(b"host.a\0"), Some("a"));
         assert_eq!(domain_from_host(b"host.au\0"), Some("au"));
     }
+
+    #[test]
+    fn comma_search() {
+        let config = Config::parse(COMMA_SEARCH).unwrap();
+        assert_eq!(
+            config.get_search().unwrap(),
+            &["another.example.com".to_string(),]
+        );
+    }
+
+    const COMMA_SEARCH: &str = r#"search example.com,sub.example.com another.example.com"#;
 }
